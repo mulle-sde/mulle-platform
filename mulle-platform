@@ -32,7 +32,7 @@
 [ "${TRACE}" = 'YES' -o "${MULLE_PLATFORM_TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
 
-MULLE_EXECUTABLE_VERSION="0.0.1"
+MULLE_EXECUTABLE_VERSION="0.0.2"
 
 
 trap_fail()
@@ -246,7 +246,7 @@ _init()
    local _libexec_dir
 
    ### *** ###
-   _get_libexec_dir "$0" "mulle_platform" "mulle-platform-search.sh"
+   _get_libexec_dir "$0" "mulle-platform" "mulle-platform-search.sh"
 
    #
    # minimal setup exit
