@@ -1,4 +1,6 @@
-# mulle-platform, 👠 Query platform specifica and search for libraries
+# mulle-platform
+
+👠 Query platform specifica and search for libraries
 
 ![Last version](https://img.shields.io/github/tag/mulle-sde/mulle-platform.svg)
 

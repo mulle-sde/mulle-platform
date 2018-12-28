@@ -60,3 +60,4 @@ _platform_get_fix_definitions()
       ;;
    esac
 }
+

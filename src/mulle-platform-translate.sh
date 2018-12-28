@@ -59,6 +59,8 @@ r_platform_translate()
    local format="$1"; shift
    local prefix="$1"; shift
    local sep="$1"; shift
+   local wholearchiveformat="$1"; shift
+
 
    local _libprefix
    local _staticlibsuffix
@@ -71,10 +73,19 @@ r_platform_translate()
 
    local name
    local lines
+   local csv
+   local marks
 
    lines=""
-   for name in "$@"
+   for csv in "$@"
    do
+      name="${csv%%;*}"
+      marks=""
+      if [ "${name}" != "${csv}" ]
+      then
+         marks="${csv#*;}"
+      fi
+
       if [ -z "${name}" ]
       then
          continue
@@ -88,8 +99,46 @@ r_platform_translate()
 
          # emit -l statements
          ld)
+            local ldname
+
             r_extensionless_basename "${name}"
-            r_concat "${lines}" "${prefix}${RVAL#${_libprefix}}" "${sep}"
+            ldname="${RVAL}"
+
+            if [ ! -z "${marks}" ]
+            then
+               case ",${marks}," in
+                  *,no-all-load,*)
+                  ;;
+
+                  *)
+                     case "${wholearchiveformat}" in
+                        'whole-archive')
+                           r_concat "${lines}" "-Wl,--whole-archive ${prefix}${ldname#${_libprefix}} -Wl,--no-whole-archive" "${sep}"
+                        ;;
+
+                        'whole-archive-win')
+                           r_concat "${lines}" "-WHOLEARCHIVE:${ldname#${_libprefix}}" "${sep}"
+                        ;;
+
+                        'force-load')
+                           r_concat "${lines}" "-force_load ${ldname#${_libprefix}}" "${sep}"
+                        ;;
+
+                        'none')
+                           r_concat "${lines}" "${prefix}${ldname#${_libprefix}}" "${sep}"
+                        ;;
+
+                        *)
+                           fail "Unknown whole-archive format \"${wholearchiveformat}\""
+                        ;;
+                     esac
+                     lines="${RVAL}"
+                     continue
+                  ;;
+               esac
+            fi
+
+            r_concat "${lines}" "${prefix}${ldname#${_libprefix}}" "${sep}"
             lines="${RVAL}"
          ;;
 
@@ -184,6 +233,7 @@ platform_translate_main()
 
    local OPTION_OUTPUT_FORMAT="ld"
    local OPTION_PREFIX="-l"
+   local OPTION_WHOLE_ARCHIVE_FORMAT="whole-archive"
    local OPTION_SEPERATOR="
 "
 
@@ -204,6 +254,20 @@ platform_translate_main()
             [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
             shift
             OPTION_SEPERATOR="$1"
+         ;;
+
+         --whole-archive-format)
+            [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
+            shift
+            OPTION_WHOLE_ARCHIVE_FORMAT="$1"
+            case "${OPTION_OUTPUT_FORMAT}" in
+               whole-archive|force-load|none|whole-archive-win)
+               ;;
+
+               *)
+                  platform_translate_usage "Unknown whole-archive format value \"${OPTION_WHOLE_ARCHIVE_FORMAT}\""
+               ;;
+            esac
          ;;
 
          --output-format)
@@ -240,6 +304,7 @@ platform_translate_main()
    r_platform_translate "${OPTION_OUTPUT_FORMAT}" \
                         "${OPTION_PREFIX}" \
                         "${OPTION_SEPERATOR}" \
+                        "${OPTION_WHOLE_ARCHIVE_FORMAT}" \
                         "$@"
 
    [ -z "${RVAL}" ] && echo "${RVAL}"
