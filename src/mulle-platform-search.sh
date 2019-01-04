@@ -48,6 +48,7 @@ Usage:
 
 Options:
    --prefer <libtype>  : can be "static" or "dynamic" (static)
+   --require <libtype> : can be "static" or "dynamic" (none)
    --searchpath <path> : a colon separated path to search
    --type <filetype>   : can be "library" or "standalone" (library)
    --output-format <f> : format can be "file" or "ld"
@@ -121,6 +122,7 @@ r_platform_search_library()
    local libdirnames="$1"; shift
    local type="$1"; shift
    local prefer="$1"; shift
+   local require="$1"; shift
 
    local first_type
    local second_type
@@ -133,40 +135,54 @@ r_platform_search_library()
 
       case "${type}" in
          standalone)
-            if r_platform_search_library_type dynamic "${directory}" \
-                                                      "${libdirnames}" \
-                                                      "${name}-standalone"
-            then
-               return 0
-            fi
-         ;;
-
-         *)
-            first_type=static
-            second_type=dynamic
-
-            case "${prefer}" in
-               dynamic)
-                  first_type=dynamic
-                  second_type=static
-               ;;
-            esac
-
-            if r_platform_search_library_type ${first_type} "${directory}" \
-                                                            "${libdirnames}" \
-                                                            "${name}"
+            if r_platform_search_library_type "dynamic" "${directory}" \
+                                                        "${libdirnames}" \
+                                                        "${name}-standalone"
             then
                return 0
             fi
 
-            if r_platform_search_library_type ${second_type} "${directory}" \
-                                                             "${libdirnames}" \
-                                                             "${name}"
-            then
-               return 0
-            fi
+            shift
+            continue
          ;;
       esac
+
+      if [ ! -z "${require}"  ]
+      then
+         if r_platform_search_library_type "${require}" "${directory}" \
+                                                        "${libdirnames}" \
+                                                        "${name}"
+         then
+            return 0
+         fi
+
+         shift
+         continue
+      fi
+
+      first_type=static
+      second_type=dynamic
+
+      case "${prefer}" in
+         dynamic)
+            first_type=dynamic
+            second_type=static
+         ;;
+      esac
+
+      if r_platform_search_library_type "${first_type}" "${directory}" \
+                                                        "${libdirnames}" \
+                                                        "${name}"
+      then
+         return 0
+      fi
+
+      if r_platform_search_library_type "${second_type}" "${directory}" \
+                                                         "${libdirnames}" \
+                                                         "${name}"
+      then
+         return 0
+      fi
 
       shift
    done
@@ -224,6 +240,7 @@ platform_search_main()
 
    local OPTION_SEARCH_PATH
    local OPTION_PREFER="static"
+   local OPTION_REQUIRE=
    local OPTION_TYPE="library"
    local OPTION_LIBRARY_DIR_NAMES
 
@@ -245,6 +262,21 @@ platform_search_main()
 
                *)
                   platform_search_usage "Unknown prefer value \"${OPTION_PREFER}\""
+               ;;
+            esac
+         ;;
+
+         --require)
+            [ $# -eq 1 ] && platform_search_usage "mMssing argument to \"$1\""
+            shift
+            OPTION_REQUIRE="$1"
+
+            case "${OPTION_REQUIRE}" in
+               dynamic|static)
+               ;;
+
+               *)
+                  platform_search_usage "Unknown require value \"${OPTION_REQUIRE}\""
                ;;
             esac
          ;;
@@ -294,8 +326,6 @@ platform_search_main()
    local libdirnames
 
    libdirnames="${OPTION_LIBRARY_DIR_NAMES:-lib}"
-
-   local RVAL
 
    if r_platform_search "${OPTION_SEARCH_PATH}" \
                         "${libdirnames}" \

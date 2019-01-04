@@ -61,7 +61,6 @@ r_platform_translate()
    local sep="$1"; shift
    local wholearchiveformat="$1"; shift
 
-
    local _libprefix
    local _staticlibsuffix
    local _dynamiclibsuffix
@@ -85,6 +84,10 @@ r_platform_translate()
       then
          marks="${csv#*;}"
       fi
+
+      log_debug "name  : ${name}"
+      log_debug "marks : ${marks}"
+      log_debug "csv   : ${csv}"
 
       if [ -z "${name}" ]
       then
@@ -120,8 +123,9 @@ r_platform_translate()
                            r_concat "${lines}" "-WHOLEARCHIVE:${ldname#${_libprefix}}" "${sep}"
                         ;;
 
+                        # force load gets full path, otherwise unhappy :/
                         'force-load')
-                           r_concat "${lines}" "-force_load ${ldname#${_libprefix}}" "${sep}"
+                           r_concat "${lines}" "-force_load ${name}" "${sep}"
                         ;;
 
                         'none')
@@ -144,9 +148,13 @@ r_platform_translate()
 
          # emit -L statements
          ldpath)
-            r_fast_dirname "${name}"
-            r_add_unique_line "${lines}" "${prefix}${RVAL}"
-            lines="${RVAL}"
+            case "${name}" in
+               /*)
+                  r_fast_dirname "${name}"
+                  r_add_unique_line "${lines}" "${prefix}${RVAL}"
+                  lines="${RVAL}"
+               ;;
+            esac
          ;;
 
          # systems that don't have rpath use LD_LIBRARY_PATH
@@ -157,7 +165,7 @@ r_platform_translate()
 
                *)
                   case "${name}" in
-                     *${_dynamiclibsuffix})
+                     /*${_dynamiclibsuffix})
                         r_fast_dirname "${name}"
                         r_add_unique_line "${lines}" "${RVAL}"
                         lines="${RVAL}"
@@ -172,7 +180,7 @@ r_platform_translate()
             case "${MULLE_UNAME}" in
                mingw*)
                   case "${name}" in
-                     *${_dynamiclibsuffix})
+                     /*${_dynamiclibsuffix})
                         r_fast_dirname "${name}"
                         r_add_unique_line "${lines}" "${RVAL}"
                         lines="${RVAL}"
@@ -186,7 +194,7 @@ r_platform_translate()
             case "${MULLE_UNAME}" in
                darwin|linux)
                   case "${name}" in
-                     *${_dynamiclibsuffix})
+                     /*${_dynamiclibsuffix})
                         r_fast_dirname "${name}"
                         r_add_unique_line "${lines}" "${prefix}${RVAL}"
                         lines="${RVAL}"
@@ -298,8 +306,6 @@ platform_translate_main()
    local name
 
    [ $# -ne 0 ] || platform_translate_usage "Missing name"
-
-   local RVAL
 
    r_platform_translate "${OPTION_OUTPUT_FORMAT}" \
                         "${OPTION_PREFIX}" \
