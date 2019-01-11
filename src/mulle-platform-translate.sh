@@ -116,7 +116,13 @@ r_platform_translate()
                   *)
                      case "${wholearchiveformat}" in
                         'whole-archive')
-                           r_concat "${lines}" "-Wl,--whole-archive ${prefix}${ldname#${_libprefix}} -Wl,--no-whole-archive" "${sep}"
+                           r_concat "${lines}" "-Wl,--whole-archive \
+${prefix}${ldname#${_libprefix}} -Wl,--no-whole-archive" "${sep}"
+                        ;;
+
+                        'whole-archive-as-needed')
+                           r_concat "${lines}" "-Wl,--whole-archive -Wl,--no-as-needed \
+${prefix}${ldname#${_libprefix}} -Wl,--as-needed -Wl,--no-whole-archive" "${sep}"
                         ;;
 
                         'whole-archive-win')
@@ -241,7 +247,7 @@ platform_translate_main()
 
    local OPTION_OUTPUT_FORMAT="ld"
    local OPTION_PREFIX="-l"
-   local OPTION_WHOLE_ARCHIVE_FORMAT="whole-archive"
+   local OPTION_WHOLE_ARCHIVE_FORMAT="whole-archive-as-needed"
    local OPTION_SEPERATOR="
 "
 
@@ -269,7 +275,7 @@ platform_translate_main()
             shift
             OPTION_WHOLE_ARCHIVE_FORMAT="$1"
             case "${OPTION_OUTPUT_FORMAT}" in
-               whole-archive|force-load|none|whole-archive-win)
+               whole-archive|force-load|none|whole-archive-win|whole-archive-as-needed)
                ;;
 
                *)

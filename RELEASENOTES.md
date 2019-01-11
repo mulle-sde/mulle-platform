@@ -1,3 +1,7 @@
+### 0.0.4
+
+* add whole-archive-as-needed for gcc
+
 ### 0.0.3
 
 * improve whole-archive output
