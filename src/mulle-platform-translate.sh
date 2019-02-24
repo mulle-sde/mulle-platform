@@ -222,8 +222,7 @@ ${prefix}${ldname#${_libprefix}} -Wl,--as-needed -Wl,--no-whole-archive" "${sep}
          local line
 
          RVAL=""
-         IFS="
-"; set -f
+         IFS=$'\n'; set -f
          for line in ${lines}
          do
             IFS="${DEFAULT_IFS}"; set +f

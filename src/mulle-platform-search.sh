@@ -66,7 +66,7 @@ _r_platform_search_static_library()
 
    r_filepath_concat "${directory}" "${_libprefix}${name}${_staticlibsuffix}"
 
-   log_fluff "Looking for \"${RVAL}\""
+   log_fluff "Looking for static library \"${RVAL}\""
 
    [ -f "${RVAL}" ]
 }
@@ -81,7 +81,7 @@ _r_platform_search_dynamic_library()
 
    r_filepath_concat "${directory}" "${_libprefix}${name}${_dynamiclibsuffix}"
 
-   log_fluff "Looking for \"${RVAL}\""
+   log_fluff "Looking for dynamic library \"${RVAL}\""
 
    [ -f "${RVAL}" ]
 }
