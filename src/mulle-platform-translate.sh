@@ -85,9 +85,12 @@ r_platform_translate()
          marks="${csv#*;}"
       fi
 
-      log_debug "name  : ${name}"
-      log_debug "marks : ${marks}"
-      log_debug "csv   : ${csv}"
+      if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
+      then
+         log_trace2 "name  : ${name}"
+         log_trace2 "marks : ${marks}"
+         log_trace2 "csv   : ${csv}"
+      fi
 
       if [ -z "${name}" ]
       then
@@ -107,46 +110,43 @@ r_platform_translate()
             r_extensionless_basename "${name}"
             ldname="${RVAL}"
 
-            if [ ! -z "${marks}" ]
-            then
-               case ",${marks}," in
-                  *,no-all-load,*)
-                  ;;
+            case ",${marks}," in
+               *,no-all-load,*)
+               ;;
 
-                  *)
-                     case "${wholearchiveformat}" in
-                        'whole-archive')
-                           r_concat "${lines}" "-Wl,--whole-archive \
+               *)
+                  case "${wholearchiveformat}" in
+                     'whole-archive')
+                        r_concat "${lines}" "-Wl,--whole-archive \
 ${prefix}${ldname#${_libprefix}} -Wl,--no-whole-archive" "${sep}"
-                        ;;
+                     ;;
 
-                        'whole-archive-as-needed')
-                           r_concat "${lines}" "-Wl,--whole-archive -Wl,--no-as-needed \
+                     'whole-archive-as-needed')
+                        r_concat "${lines}" "-Wl,--whole-archive -Wl,--no-as-needed \
 ${prefix}${ldname#${_libprefix}} -Wl,--as-needed -Wl,--no-whole-archive" "${sep}"
-                        ;;
+                     ;;
 
-                        'whole-archive-win')
-                           r_concat "${lines}" "-WHOLEARCHIVE:${ldname#${_libprefix}}" "${sep}"
-                        ;;
+                     'whole-archive-win')
+                        r_concat "${lines}" "-WHOLEARCHIVE:${ldname#${_libprefix}}" "${sep}"
+                     ;;
 
-                        # force load gets full path, otherwise unhappy :/
-                        'force-load')
-                           r_concat "${lines}" "-force_load ${name}" "${sep}"
-                        ;;
+                     # force load gets full path, otherwise unhappy :/
+                     'force-load')
+                        r_concat "${lines}" "-force_load ${name}" "${sep}"
+                     ;;
 
-                        'none')
-                           r_concat "${lines}" "${prefix}${ldname#${_libprefix}}" "${sep}"
-                        ;;
+                     'none')
+                        r_concat "${lines}" "${prefix}${ldname#${_libprefix}}" "${sep}"
+                     ;;
 
-                        *)
-                           fail "Unknown whole-archive format \"${wholearchiveformat}\""
-                        ;;
-                     esac
-                     lines="${RVAL}"
-                     continue
-                  ;;
-               esac
-            fi
+                     *)
+                        fail "Unknown whole-archive format \"${wholearchiveformat}\""
+                     ;;
+                  esac
+                  lines="${RVAL}"
+                  continue
+               ;;
+            esac
 
             r_concat "${lines}" "${prefix}${ldname#${_libprefix}}" "${sep}"
             lines="${RVAL}"
