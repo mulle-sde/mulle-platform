@@ -32,7 +32,7 @@
 [ "${TRACE}" = 'YES' -o "${MULLE_PLATFORM_TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
 
-MULLE_EXECUTABLE_VERSION="0.0.4"
+MULLE_EXECUTABLE_VERSION="0.1.0"
 
 
 trap_fail()
@@ -181,6 +181,13 @@ main()
          . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-translate.sh"
 
          platform_translate_main "$@"
+      ;;
+
+      'wholearchive')
+         # shellcheck source=src/mulle-platform-translate.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-translate.sh"
+
+         platform_default_wholearchive_format "$@"
       ;;
 
       'libexec-dir')

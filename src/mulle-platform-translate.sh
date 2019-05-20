@@ -52,13 +52,184 @@ EOF
 }
 
 
-r_platform_translate()
+r_platform_simplify_wholearchive()
 {
-   log_entry "r_platform_translate" "$@"
+   log_entry "r_platform_simplify_wholearchive" "$@"
+
+   local lines="$1"
+   local wholearchiveformat="$2"
+
+   case "${wholearchiveformat}" in
+      'whole-archive')
+         RVAL="${lines//-Wl,--no-whole-archive
+-Wl,--whole-archive/}"
+      ;;
+
+      'whole-archive-as-needed')
+         RVAL="${lines//-Wl,--as-needed -Wl,--no-whole-archive
+-Wl,--whole-archive -Wl,--no-as-needed/}"
+      ;;
+
+      *)
+         RVAL=${lines}
+      ;;
+   esac
+}
+
+
+_r_platform_translate()
+{
+   log_entry "_r_platform_translate" "$@"
+
+   local format="$1"
+   local prefix="$2"
+   local wholearchiveformat="$3"
+   local csv="$4"
+
+   local name
+   local lines
+   local marks
+
+   RVAL=
+   name="${csv%%;*}"
+   if [ -z "${name}" ]
+   then
+      return
+   fi
+
+   marks=""
+   if [ "${name}" != "${csv}" ]
+   then
+      marks="${csv#*;}"
+   fi
+
+
+   case "${format}" in
+      file)
+         RVAL="${name}"
+      ;;
+
+      # emit -l statements
+      ld)
+         local ldname
+
+         r_extensionless_basename "${name}"
+         ldname="${RVAL}"
+
+         case ",${marks}," in
+            *,no-all-load,*)
+               RVAL="${prefix}${ldname#${_libprefix}}"
+            ;;
+
+            *)
+               case "${wholearchiveformat}" in
+                  'whole-archive')
+                     RVAL="-Wl,--whole-archive \
+${prefix}${ldname#${_libprefix}} -Wl,--no-whole-archive"
+                  ;;
+
+                  'whole-archive-as-needed')
+                     RVAL="-Wl,--whole-archive -Wl,--no-as-needed \
+${prefix}${ldname#${_libprefix}} -Wl,--as-needed -Wl,--no-whole-archive"
+                  ;;
+
+                  'whole-archive-win')
+                     RVAL="-WHOLEARCHIVE:${ldname#${_libprefix}}"
+                  ;;
+
+                  # force load gets full path, otherwise unhappy :/
+                  'force-load')
+                     is_absolutepath "${name}" || fail "\"${name}\" must be absolute for -force_load"
+                     RVAL="-force_load ${name}"
+                  ;;
+
+                  'none')
+                     RVAL="${prefix}${ldname#${_libprefix}}"
+                  ;;
+
+                  *)
+                     fail "Unknown whole-archive format \"${wholearchiveformat}\""
+                  ;;
+               esac
+            ;;
+         esac
+      ;;
+
+      # emit -L statements
+      ldpath)
+         case "${name}" in
+            /*)
+               r_fast_dirname "${name}"
+               RVAL="${prefix}${RVAL}"
+            ;;
+         esac
+      ;;
+
+      # systems that don't have rpath use LD_LIBRARY_PATH
+      ld_library_path)
+         case "${MULLE_UNAME}" in
+            darwin|mingw)
+            ;;
+
+            *)
+               case "${name}" in
+                  /*${_dynamiclibsuffix})
+                     r_fast_dirname "${name}"
+                     r_add_unique_line "${lines}" "${RVAL}"
+                  ;;
+               esac
+            ;;
+         esac
+      ;;
+
+      # PATH only set on mingw to find DLLs
+      path)
+         case "${MULLE_UNAME}" in
+            mingw*)
+               case "${name}" in
+                  /*${_dynamiclibsuffix})
+                     r_fast_dirname "${name}"
+                     r_add_unique_line "${lines}" "${RVAL}"
+                  ;;
+               esac
+            ;;
+         esac
+      ;;
+
+      rpath)
+         case "${MULLE_UNAME}" in
+            darwin|linux)
+               case "${name}" in
+                  /*${_dynamiclibsuffix})
+                     r_fast_dirname "${name}"
+                     r_add_unique_line "${lines}" "${prefix}${RVAL}"
+                  ;;
+               esac
+            ;;
+         esac
+      ;;
+
+      *)
+         internal_fail "unknown format \"${format}\""
+      ;;
+   esac
+
+   if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
+   then
+      log_trace2 "csv   : ${csv}"
+      log_trace2 "name  : ${name}"
+      log_trace2 "marks : ${marks}"
+      log_trace2 "RVAL  : ${RVAL}"
+   fi
+}
+
+
+r_platform_translate_lines()
+{
+   log_entry "r_platform_translate_lines" "$@"
 
    local format="$1"; shift
    local prefix="$1"; shift
-   local sep="$1"; shift
    local wholearchiveformat="$1"; shift
 
    local _libprefix
@@ -78,142 +249,12 @@ r_platform_translate()
    lines=""
    for csv in "$@"
    do
-      name="${csv%%;*}"
-      marks=""
-      if [ "${name}" != "${csv}" ]
-      then
-         marks="${csv#*;}"
-      fi
-
-      if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
-      then
-         log_trace2 "name  : ${name}"
-         log_trace2 "marks : ${marks}"
-         log_trace2 "csv   : ${csv}"
-      fi
-
-      if [ -z "${name}" ]
-      then
-         continue
-      fi
-
-      case "${format}" in
-         file)
-            r_concat "${lines}" "${name}" "${sep}"
-            lines="${RVAL}"
-         ;;
-
-         # emit -l statements
-         ld)
-            local ldname
-
-            r_extensionless_basename "${name}"
-            ldname="${RVAL}"
-
-            case ",${marks}," in
-               *,no-all-load,*)
-               ;;
-
-               *)
-                  case "${wholearchiveformat}" in
-                     'whole-archive')
-                        r_concat "${lines}" "-Wl,--whole-archive \
-${prefix}${ldname#${_libprefix}} -Wl,--no-whole-archive" "${sep}"
-                     ;;
-
-                     'whole-archive-as-needed')
-                        r_concat "${lines}" "-Wl,--whole-archive -Wl,--no-as-needed \
-${prefix}${ldname#${_libprefix}} -Wl,--as-needed -Wl,--no-whole-archive" "${sep}"
-                     ;;
-
-                     'whole-archive-win')
-                        r_concat "${lines}" "-WHOLEARCHIVE:${ldname#${_libprefix}}" "${sep}"
-                     ;;
-
-                     # force load gets full path, otherwise unhappy :/
-                     'force-load')
-                        r_concat "${lines}" "-force_load ${name}" "${sep}"
-                     ;;
-
-                     'none')
-                        r_concat "${lines}" "${prefix}${ldname#${_libprefix}}" "${sep}"
-                     ;;
-
-                     *)
-                        fail "Unknown whole-archive format \"${wholearchiveformat}\""
-                     ;;
-                  esac
-                  lines="${RVAL}"
-                  continue
-               ;;
-            esac
-
-            r_concat "${lines}" "${prefix}${ldname#${_libprefix}}" "${sep}"
-            lines="${RVAL}"
-         ;;
-
-         # emit -L statements
-         ldpath)
-            case "${name}" in
-               /*)
-                  r_fast_dirname "${name}"
-                  r_add_unique_line "${lines}" "${prefix}${RVAL}"
-                  lines="${RVAL}"
-               ;;
-            esac
-         ;;
-
-         # systems that don't have rpath use LD_LIBRARY_PATH
-         ld_library_path)
-            case "${MULLE_UNAME}" in
-               darwin|mingw)
-               ;;
-
-               *)
-                  case "${name}" in
-                     /*${_dynamiclibsuffix})
-                        r_fast_dirname "${name}"
-                        r_add_unique_line "${lines}" "${RVAL}"
-                        lines="${RVAL}"
-                     ;;
-                  esac
-               ;;
-            esac
-         ;;
-
-         # PATH only set on mingw to find DLLs
-         path)
-            case "${MULLE_UNAME}" in
-               mingw*)
-                  case "${name}" in
-                     /*${_dynamiclibsuffix})
-                        r_fast_dirname "${name}"
-                        r_add_unique_line "${lines}" "${RVAL}"
-                        lines="${RVAL}"
-                     ;;
-                  esac
-               ;;
-            esac
-         ;;
-
-         rpath)
-            case "${MULLE_UNAME}" in
-               darwin|linux)
-                  case "${name}" in
-                     /*${_dynamiclibsuffix})
-                        r_fast_dirname "${name}"
-                        r_add_unique_line "${lines}" "${prefix}${RVAL}"
-                        lines="${RVAL}"
-                     ;;
-                  esac
-               ;;
-            esac
-         ;;
-
-         *)
-            internal_fail "unknown format \"${format}\""
-         ;;
-      esac
+      _r_platform_translate "${format}" \
+                            "${prefix}" \
+                            "${wholearchiveformat}" \
+                            "${csv}"
+      r_add_unique_line "${lines}" "${RVAL}"
+      lines="${RVAL}"
    done
 
    # path stuff needs to be reorganized
@@ -226,15 +267,39 @@ ${prefix}${ldname#${_libprefix}} -Wl,--as-needed -Wl,--no-whole-archive" "${sep}
          for line in ${lines}
          do
             IFS="${DEFAULT_IFS}"; set +f
-            r_concat "${RVAL}" "${line}" "${sep}"
+            r_add_line "${RVAL}" "${line}"
          done
          IFS="${DEFAULT_IFS}"; set +f
-
-         return
+         lines="${RVAL}"
       ;;
    esac
 
    RVAL="${lines}"
+}
+
+
+r_platform_default_whole_archive_format()
+{
+   case "${MULLE_UNAME}" in
+      mingw*)
+         RVAL="whole-archive-win"
+      ;;
+
+      darwin)
+         RVAL="force-load"
+      ;;
+
+      *)
+         RVAL="whole-archive-as-needed"
+      ;;
+   esac
+}
+
+
+platform_default_wholearchive_format()
+{
+   r_platform_default_whole_archive_format
+   echo "$RVAL"
 }
 
 
@@ -246,9 +311,11 @@ platform_translate_main()
 
    local OPTION_OUTPUT_FORMAT="ld"
    local OPTION_PREFIX="-l"
-   local OPTION_WHOLE_ARCHIVE_FORMAT="whole-archive-as-needed"
-   local OPTION_SEPERATOR="
-"
+   local OPTION_WHOLE_ARCHIVE_FORMAT
+   local OPTION_SEPERATOR=$'\n'
+
+   r_platform_default_whole_archive_format
+   OPTION_WHOLE_ARCHIVE_FORMAT="${RVAL}"
 
    while [ $# -ne 0 ]
    do

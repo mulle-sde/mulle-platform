@@ -142,6 +142,17 @@ r_platform_search_library()
                return 0
             fi
 
+            #
+            # if we build everything as shared libraries then we don't
+            # need a -standalone library
+            #
+            if r_platform_search_library_type "dynamic" "${directory}" \
+                                                        "${libdirnames}" \
+                                                        "${name}"
+            then
+               return 0
+            fi
+
             shift
             continue
          ;;
