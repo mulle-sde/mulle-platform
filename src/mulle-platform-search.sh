@@ -344,7 +344,7 @@ platform_search_main()
                         "${OPTION_PREFER}" \
                         "$@"
    then
-      rexekutor echo "${RVAL}"
+      rexekutor printf "%s\n" "${RVAL}"
       return 0
    fi
 

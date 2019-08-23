@@ -59,21 +59,14 @@ r_platform_simplify_wholearchive()
    local lines="$1"
    local wholearchiveformat="$2"
 
-   case "${wholearchiveformat}" in
-      'whole-archive')
-         RVAL="${lines//-Wl,--no-whole-archive
--Wl,--whole-archive/}"
-      ;;
-
-      'whole-archive-as-needed')
-         RVAL="${lines//-Wl,--as-needed -Wl,--no-whole-archive
+   # do some common substitutions regardless of format
+   RVAL="${lines//-Wl,--as-needed -Wl,--no-whole-archive
 -Wl,--whole-archive -Wl,--no-as-needed/}"
-      ;;
-
-      *)
-         RVAL=${lines}
-      ;;
-   esac
+   RVAL="${RVAL//-Wl,--no-whole-archive -Wl,--as-needed
+-Wl,--no-as-needed -Wl,--whole-archive/}"
+   RVAL="${RVAL//-Wl,--no-whole-archive
+-Wl,--whole-archive/}"
+   RVAL="${RVAL//-Wl,--as-needed -Wl,--no-as-needed/}"
 }
 
 
@@ -124,13 +117,18 @@ _r_platform_translate()
             *)
                case "${wholearchiveformat}" in
                   'whole-archive')
-                     RVAL="-Wl,--whole-archive \
+                     RVAL="-Wl,--whole-archive, -Wl,--export-dynamic \
 ${prefix}${ldname#${_libprefix}} -Wl,--no-whole-archive"
                   ;;
 
                   'whole-archive-as-needed')
-                     RVAL="-Wl,--whole-archive -Wl,--no-as-needed \
+                     RVAL="-Wl,--whole-archive -Wl,--no-as-needed -Wl,--export-dynamic \
 ${prefix}${ldname#${_libprefix}} -Wl,--as-needed -Wl,--no-whole-archive"
+                  ;;
+
+                  'as-needed')
+                     RVAL="-Wl,--no-as-needed -Wl,--export-dynamic \
+${prefix}${ldname#${_libprefix}} -Wl,--as-needed"
                   ;;
 
                   'whole-archive-win')
@@ -299,7 +297,7 @@ r_platform_default_whole_archive_format()
 platform_default_wholearchive_format()
 {
    r_platform_default_whole_archive_format
-   echo "$RVAL"
+   printf "%s\n" "$RVAL"
 }
 
 
@@ -341,7 +339,7 @@ platform_translate_main()
             shift
             OPTION_WHOLE_ARCHIVE_FORMAT="$1"
             case "${OPTION_OUTPUT_FORMAT}" in
-               whole-archive|force-load|none|whole-archive-win|whole-archive-as-needed)
+               whole-archive|force-load|none|whole-archive-win|as-needed)
                ;;
 
                *)
@@ -385,6 +383,6 @@ platform_translate_main()
                         "${OPTION_WHOLE_ARCHIVE_FORMAT}" \
                         "$@"
 
-   [ -z "${RVAL}" ] && echo "${RVAL}"
+   [ -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
 }
 

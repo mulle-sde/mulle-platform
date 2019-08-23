@@ -32,7 +32,7 @@
 [ "${TRACE}" = 'YES' -o "${MULLE_PLATFORM_TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
 
-MULLE_EXECUTABLE_VERSION="0.1.0"
+MULLE_EXECUTABLE_VERSION="0.2.0"
 
 
 trap_fail()
@@ -53,11 +53,11 @@ print_commands()
    version     : print mulle-platform version"
 
 
-   echo "${SHOWN_COMMANDS}"
+   printf "%s\n" "${SHOWN_COMMANDS}"
 
    if [ "${MULLE_FLAG_LOG_VERBOSE}" != 'NO' ]
    then
-      echo "${HIDDEN_COMMANDS}"
+      printf "%s\n" "${HIDDEN_COMMANDS}"
    fi
 }
 
@@ -146,7 +146,7 @@ main()
          ;;
 
          --version)
-            echo "${MULLE_EXECUTABLE_VERSION}"
+            printf "%s\n" "${MULLE_EXECUTABLE_VERSION}"
             exit 0
          ;;
 
@@ -191,15 +191,15 @@ main()
       ;;
 
       'libexec-dir')
-         echo "${MULLE_PLATFORM_LIBEXEC_DIR}"
+         printf "%s\n" "${MULLE_PLATFORM_LIBEXEC_DIR}"
       ;;
 
       'uname')
-         echo "${MULLE_UNAME}"
+         printf "%s\n" "${MULLE_UNAME}"
       ;;
 
       'version')
-         echo "${MULLE_EXECUTABLE_VERSION}"
+         printf "%s\n" "${MULLE_EXECUTABLE_VERSION}"
       ;;
 
       "")
@@ -224,7 +224,7 @@ _init()
    #
    if [ "$1" = "version" ]
    then
-      echo "${MULLE_EXECUTABLE_VERSION}"
+      printf "%s\n" "${MULLE_EXECUTABLE_VERSION}"
       exit 0
    fi
 
@@ -259,7 +259,7 @@ _init()
    #
    case "$1" in
       "libexec-dir")
-         echo "${_libexec_dir}"
+         printf "%s\n" "${_libexec_dir}"
          exit 0
       ;;
    esac
