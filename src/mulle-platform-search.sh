@@ -96,7 +96,7 @@ r_platform_search_library_type()
    local libdirnames="$3"
    local name="$4"
 
-   IFS=":"; set -f
+   IFS=':'; set -f
 
    for libdirname in ${libdirnames}
    do
@@ -221,7 +221,7 @@ r_platform_search()
 
    local directory
 
-   IFS=":" ; set -f
+   IFS=':' ; set -f
    for directory in ${searchpath}
    do
       IFS="${DEFAULT_IFS}" ; set +f
