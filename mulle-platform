@@ -249,22 +249,20 @@ _init()
    . "${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-file.sh" ||
       fail "failed to load bashfunctions from ${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}"
 
-   local _libexec_dir
-
    ### *** ###
-   _get_libexec_dir "$0" "mulle-platform" "mulle-platform-search.sh"
+   r_get_libexec_dir "$0" "mulle-platform" "mulle-platform-search.sh"
+   MULLE_PLATFORM_LIBEXEC_DIR="${RVAL}"
 
    #
    # minimal setup exit
    #
    case "$1" in
       "libexec-dir")
-         printf "%s\n" "${_libexec_dir}"
+         printf "%s\n" "${MULLE_PLATFORM_LIBEXEC_DIR}"
          exit 0
       ;;
    esac
 
-   MULLE_PLATFORM_LIBEXEC_DIR="${_libexec_dir}"
 
    #  set -e # more pain then gain in the end
    #  set -u # doesn't work with my style

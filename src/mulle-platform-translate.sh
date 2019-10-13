@@ -157,7 +157,7 @@ ${prefix}${ldname#${_libprefix}} -Wl,--as-needed"
       ldpath)
          case "${name}" in
             /*)
-               r_fast_dirname "${name}"
+               r_dirname "${name}"
                RVAL="${prefix}${RVAL}"
             ;;
          esac
@@ -172,7 +172,7 @@ ${prefix}${ldname#${_libprefix}} -Wl,--as-needed"
             *)
                case "${name}" in
                   /*${_dynamiclibsuffix})
-                     r_fast_dirname "${name}"
+                     r_dirname "${name}"
                      r_add_unique_line "${lines}" "${RVAL}"
                   ;;
                esac
@@ -186,7 +186,7 @@ ${prefix}${ldname#${_libprefix}} -Wl,--as-needed"
             mingw*)
                case "${name}" in
                   /*${_dynamiclibsuffix})
-                     r_fast_dirname "${name}"
+                     r_dirname "${name}"
                      r_add_unique_line "${lines}" "${RVAL}"
                   ;;
                esac
@@ -199,7 +199,7 @@ ${prefix}${ldname#${_libprefix}} -Wl,--as-needed"
             darwin|linux)
                case "${name}" in
                   /*${_dynamiclibsuffix})
-                     r_fast_dirname "${name}"
+                     r_dirname "${name}"
                      r_add_unique_line "${lines}" "${prefix}${RVAL}"
                   ;;
                esac
