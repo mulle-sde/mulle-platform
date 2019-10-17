@@ -1,3 +1,9 @@
+## 0.2.0
+
+* changed to mulle-bashfunctions 2 call convention
+* moved to mulle-bashfunctions v2
+
+
 ## 0.1.0
 
 * add wholearchive commmand
