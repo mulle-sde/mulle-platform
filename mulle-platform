@@ -44,7 +44,10 @@ trap_fail()
 print_commands()
 {
    SHOWN_COMMANDS="\
-   command     : does nothing interesting so far
+   search        : search for an OS library
+   searchpath    : print searchpath for OS libraries
+   translate     : trab
+   wholearchive  : produce linker command for whole archive linking
 "
 
    HIDDEN_COMMANDS="\
@@ -174,6 +177,14 @@ main()
          . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-search.sh"
 
          platform_search_main "$@"
+      ;;
+
+      'searchpath')
+         # if you rename this command, search for '***' and rename as well
+         # shellcheck source=src/mulle-platform-search.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-search.sh"
+
+         platform_searchpath_main "$@"
       ;;
 
       'translate')

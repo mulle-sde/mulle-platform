@@ -41,12 +41,18 @@ platform_translate_usage()
 Usage:
    ${MULLE_USAGE_NAME} ${MULLE_USAGE_COMMAND:-translate} [options] <filename>
 
-   Change the representation of filenames.
+   Change the representation of a filenames suitable for passing them to the
+   linker. The default prints each link command on a separate line for "ld"
+   and "file".
+
+   Some output-formats like "rpath" or "path" are invalid for some platforms
+   and will produce no output.
 
 Options:
-   --prefix            : specify prefix for ld
-   --output-format <f> : one of file,ld,ldpath,ld_library_path,path,rpath
-   --seperator <sep>   : specify seperator for filenames
+   --prefix            : specify prefix for link command (-ld)
+   --output-format <f> : one of file,ld,ldpath,ld_library_path,path,rpath (ld)
+   --separator <sep>   : specify separator for "ld" and "file"
+
 EOF
    exit 1
 }
@@ -95,7 +101,6 @@ _r_platform_translate()
    then
       marks="${csv#*;}"
    fi
-
 
    case "${format}" in
       file)
@@ -171,6 +176,10 @@ _r_platform_translate()
                r_dirname "${name}"
                RVAL="${prefix}${RVAL}"
             ;;
+
+            *)
+               log_fluff "Relative path \"${name}\" ignored"
+            ;;
          esac
       ;;
 
@@ -178,6 +187,7 @@ _r_platform_translate()
       ld_library_path)
          case "${MULLE_UNAME}" in
             darwin|mingw)
+               log_fluff "\"${name}\" on \"${MULLE_UNAME}\" ignored"
             ;;
 
             *)
@@ -185,6 +195,10 @@ _r_platform_translate()
                   /*${_dynamiclibsuffix})
                      r_dirname "${name}"
                      r_add_unique_line "${lines}" "${RVAL}"
+                  ;;
+
+                  *)
+                     log_fluff "\"${name}\" without \"${_dynamiclibsuffix}\" suffix ignored"
                   ;;
                esac
             ;;
@@ -200,7 +214,15 @@ _r_platform_translate()
                      r_dirname "${name}"
                      r_add_unique_line "${lines}" "${RVAL}"
                   ;;
+
+                  *)
+                     log_fluff "\"${name}\" without \"${_dynamiclibsuffix}\" suffix ignored"
+                  ;;
                esac
+            ;;
+
+            *)
+               log_fluff "\"${name}\" on \"${MULLE_UNAME}\" ignored"
             ;;
          esac
       ;;
@@ -213,7 +235,15 @@ _r_platform_translate()
                      r_dirname "${name}"
                      r_add_unique_line "${lines}" "${prefix}${RVAL}"
                   ;;
+
+                  *)
+                     log_fluff "\"${name}\" without \"${_dynamiclibsuffix}\" suffix ignored"
+                  ;;
                esac
+            ;;
+
+            *)
+               log_fluff "\"${name}\" on \"${MULLE_UNAME}\" ignored"
             ;;
          esac
       ;;
@@ -239,6 +269,7 @@ r_platform_translate_lines()
 
    local format="$1"; shift
    local prefix="$1"; shift
+   local separator="$1"; shift
    local wholearchiveformat="$1"; shift
 
    local _libprefix
@@ -266,24 +297,16 @@ r_platform_translate_lines()
       lines="${RVAL}"
    done
 
-   # path stuff needs to be reorganized
-   case "${format}" in
-      *path)
-         local line
+   local line
 
-         RVAL=""
-         IFS=$'\n'; set -f
-         for line in ${lines}
-         do
-            IFS="${DEFAULT_IFS}"; set +f
-            r_add_line "${RVAL}" "${line}"
-         done
-         IFS="${DEFAULT_IFS}"; set +f
-         lines="${RVAL}"
-      ;;
-   esac
-
-   RVAL="${lines}"
+   RVAL=""
+   IFS=$'\n'; set -f
+   for line in ${lines}
+   do
+      IFS="${DEFAULT_IFS}"; set +f
+      r_concat "${RVAL}" "${line}" "${separator}"
+   done
+   IFS="${DEFAULT_IFS}"; set +f
 }
 
 
@@ -308,7 +331,7 @@ r_platform_default_whole_archive_format()
 platform_default_wholearchive_format()
 {
    r_platform_default_whole_archive_format
-   printf "%s\n" "$RVAL"
+   [ ! -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
 }
 
 
@@ -321,10 +344,7 @@ platform_translate_main()
    local OPTION_OUTPUT_FORMAT="ld"
    local OPTION_PREFIX="-l"
    local OPTION_WHOLE_ARCHIVE_FORMAT
-   local OPTION_SEPERATOR=$'\n'
-
-   r_platform_default_whole_archive_format
-   OPTION_WHOLE_ARCHIVE_FORMAT="${RVAL}"
+   local OPTION_SEPARATOR=$'\n'
 
    while [ $# -ne 0 ]
    do
@@ -339,15 +359,16 @@ platform_translate_main()
             OPTION_PREFIX="$1"
          ;;
 
-         --seperator)
+         --separator|--separator)
             [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
             shift
-            OPTION_SEPERATOR="$1"
+            OPTION_SEPARATOR="$1"
          ;;
 
          --whole-archive-format)
             [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
             shift
+
             OPTION_WHOLE_ARCHIVE_FORMAT="$1"
             case "${OPTION_OUTPUT_FORMAT}" in
                whole-archive|force-load|none|whole-archive-win|as-needed)
@@ -364,7 +385,7 @@ platform_translate_main()
             shift
             OPTION_OUTPUT_FORMAT="$1"
             case "${OPTION_OUTPUT_FORMAT}" in
-               ld|file)
+               ld|file|ldpath|ld_library_path|path|rpath)
                ;;
 
                *)
@@ -388,12 +409,12 @@ platform_translate_main()
 
    [ $# -ne 0 ] || platform_translate_usage "Missing name"
 
-   r_platform_translate "${OPTION_OUTPUT_FORMAT}" \
-                        "${OPTION_PREFIX}" \
-                        "${OPTION_SEPERATOR}" \
-                        "${OPTION_WHOLE_ARCHIVE_FORMAT}" \
-                        "$@"
+   r_platform_translate_lines "${OPTION_OUTPUT_FORMAT}" \
+                              "${OPTION_PREFIX}" \
+                              "${OPTION_SEPARATOR}" \
+                              "${OPTION_WHOLE_ARCHIVE_FORMAT}" \
+                              "$@"
 
-   [ -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
+   [ ! -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
 }
 

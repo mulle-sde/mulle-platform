@@ -41,7 +41,8 @@ platform_search_usage()
 Usage:
    ${MULLE_USAGE_NAME} ${MULLE_USAGE_COMMAND:-search} [options] <name>
 
-   Search for files (usually libraries) given a name in the the searchpath.
+   Search for files (usually libraries) given a name in the platforms
+   searchpath.
 
    Generally it's preferable to use cmake's \`find_library\` for this, which
    is more flexable.
@@ -56,6 +57,22 @@ EOF
    exit 1
 }
 
+
+platform_searchpath_usage()
+{
+   [ $# -ne 0 ] && log_error "$1"
+
+   cat <<EOF >&2
+Usage:
+   ${MULLE_USAGE_NAME} ${MULLE_USAGE_COMMAND:-searchpath}
+
+   Show the searchpath used on this platform for finding OS libraries.
+
+Notes:
+   On linux one
+EOF
+   exit 1
+}
 
 _r_platform_search_static_library()
 {
@@ -93,23 +110,13 @@ r_platform_search_library_type()
 
    local type="$1"
    local directory="$2"
-   local libdirnames="$3"
-   local name="$4"
+   local name="$3"
 
-   IFS=':'; set -f
-
-   for libdirname in ${libdirnames}
-   do
-      IFS="${DEFAULT_IFS}"; set +f
-
-      r_filepath_concat "${directory}" "${libdirname}"
-      if _r_platform_search_${type}_library "${RVAL}" "${name}"
-      then
-         return 0
-      fi
-   done
-   IFS="${DEFAULT_IFS}"; set +f
-
+   if _r_platform_search_${type}_library "${directory}" "${name}"
+   then
+      log_fluff "Found"
+      return 0
+   fi
    return 1
 }
 
@@ -119,13 +126,10 @@ r_platform_search_library()
    log_entry "r_platform_search_library" "$@"
 
    local directory="$1"; shift
-   local libdirnames="$1"; shift
    local type="$1"; shift
    local prefer="$1"; shift
    local require="$1"; shift
 
-   local first_type
-   local second_type
    local name
 
    while [ $# -ne 0 ]
@@ -133,35 +137,31 @@ r_platform_search_library()
       name="$1"
       [ -z "${name}" ] && fail "empty name is not allowed"
 
-      case "${type}" in
-         standalone)
-            if r_platform_search_library_type "dynamic" "${directory}" \
-                                                        "${libdirnames}" \
-                                                        "${name}-standalone"
-            then
-               return 0
-            fi
+      if [  "${type}" = 'standalone' ]
+      then
+         if r_platform_search_library_type "dynamic" "${directory}" \
+                                                     "${name}-standalone"
+         then
+            return 0
+         fi
 
-            #
-            # if we build everything as shared libraries then we don't
-            # need a -standalone library
-            #
-            if r_platform_search_library_type "dynamic" "${directory}" \
-                                                        "${libdirnames}" \
-                                                        "${name}"
-            then
-               return 0
-            fi
+         #
+         # if we build everything as shared libraries then we don't
+         # need a -standalone library
+         #
+         if r_platform_search_library_type "dynamic" "${directory}" \
+                                                     "${name}"
+         then
+            return 0
+         fi
 
-            shift
-            continue
-         ;;
-      esac
+         shift
+         continue
+      fi
 
-      if [ ! -z "${require}"  ]
+      if [ ! -z "${require}" ]
       then
          if r_platform_search_library_type "${require}" "${directory}" \
-                                                        "${libdirnames}" \
                                                         "${name}"
          then
             return 0
@@ -170,6 +170,9 @@ r_platform_search_library()
          shift
          continue
       fi
+
+      local first_type
+      local second_type
 
       first_type=static
       second_type=dynamic
@@ -182,14 +185,12 @@ r_platform_search_library()
       esac
 
       if r_platform_search_library_type "${first_type}" "${directory}" \
-                                                        "${libdirnames}" \
                                                         "${name}"
       then
          return 0
       fi
 
       if r_platform_search_library_type "${second_type}" "${directory}" \
-                                                         "${libdirnames}" \
                                                          "${name}"
       then
          return 0
@@ -201,6 +202,39 @@ r_platform_search_library()
    return 1
 }
 
+#
+# somewhat dependent on linux to have gcc/clang installed
+#
+r_platform_searchpath()
+{
+   if [ -z "${MULLE_PLATFORM_SEARCHPATH}" ]
+   then
+      case "${MULLE_UNAME}" in
+         linux|windows|mingw)
+            RVAL=""
+
+            local line
+            IFS=':' ; set -f
+            for line in `rexekutor "${CC:-cc}" -Xlinker --verbose  2>/dev/null | \
+                           sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp' | \
+                           egrep -v '^$' `
+            do
+               r_colon_concat "${RVAL}" "${line}"
+            done
+            IFS="${DEFAULT_IFS}" ; set +f
+            MULLE_PLATFORM_SEARCHPATH="${RVAL}"
+         ;;
+
+         *)
+            MULLE_PLATFORM_SEARCHPATH="/usr/local/lib:/usr/lib"
+         ;;
+      esac
+   fi
+
+   RVAL="${MULLE_PLATFORM_SEARCHPATH}"
+   log_verbose "Platform library searchpath: ${RVAL}"
+}
+
 
 r_platform_search()
 {
@@ -208,7 +242,11 @@ r_platform_search()
 
    local searchpath="$1"; shift
 
-   [ -z "${searchpath}" ] && fail "search path is empty"
+   if [ -z "${searchpath}" ]
+   then
+      r_platform_searchpath
+      searchpath="${RVAL}"
+   fi
 
    [ -z "${MULLE_PLATFORM_ENVIRONMENT_SH}" ] && \
       . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
@@ -243,6 +281,40 @@ r_platform_search()
 }
 
 
+platform_searchpath_main()
+{
+   log_entry "platform_searchpath_main" "$@"
+
+   [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
+
+   while [ $# -ne 0 ]
+   do
+      case "$1" in
+         -h*|--help|help)
+            platform_searchpath_usage
+         ;;
+
+         -*)
+            platform_searchpath_usage "Unknown option \"$1\""
+         ;;
+
+         *)
+            break
+         ;;
+      esac
+      shift
+   done
+
+   local name
+   local directory
+
+   [ $# -eq 0 ] || platform_searchpath_usage "Superflous parameters \"$*\""
+
+   r_platform_searchpath
+   echo "${RVAL}"
+}
+
+
 platform_search_main()
 {
    log_entry "platform_search_main" "$@"
@@ -253,7 +325,6 @@ platform_search_main()
    local OPTION_PREFER="static"
    local OPTION_REQUIRE=
    local OPTION_TYPE="library"
-   local OPTION_LIBRARY_DIR_NAMES
 
    while [ $# -ne 0 ]
    do
@@ -292,12 +363,6 @@ platform_search_main()
             esac
          ;;
 
-         --library-dir-names)
-            [ $# -eq 1 ] && platform_search_usage "Missing argument to \"$1\""
-            shift
-            OPTION_LIBRARY_DIR_NAMES="$1"
-         ;;
-
          --search-path)
             [ $# -eq 1 ] && platform_search_usage "Missing argument to \"$1\""
             shift
@@ -307,6 +372,7 @@ platform_search_main()
          --type)
             [ $# -eq 1 ] && platform_search_usage "Missing argument to \"$1\""
             shift
+
             OPTION_TYPE="$1"
             case "${OPTION_TYPE}" in
                library|standalone)
@@ -334,14 +400,10 @@ platform_search_main()
 
    [ $# -ne 0 ] || platform_search_usage "Missing name"
 
-   local libdirnames
-
-   libdirnames="${OPTION_LIBRARY_DIR_NAMES:-lib}"
-
    if r_platform_search "${OPTION_SEARCH_PATH}" \
-                        "${libdirnames}" \
                         "${OPTION_TYPE}" \
                         "${OPTION_PREFER}" \
+                        "${OPTION_REQUIRE}" \
                         "$@"
    then
       rexekutor printf "%s\n" "${RVAL}"
@@ -351,4 +413,6 @@ platform_search_main()
    log_warning "No library found for \"$*\""
    return 1
 }
+
+
 

@@ -7,10 +7,14 @@
 ... for Linux, OS X, FreeBSD, Windows
 
 
-**mulle-platform** lets you query the platform for such things like the extension
-of shared libraries or the location of specific libraries.
+**mulle-platform** lets you query the current platform for such things like the
+extension of shared libraries or the location of specific libraries.
 
-You are generally better off to use cmake for such things.
+For example `mulle-platform search dl` returns
+`/usr/lib/x86_64-linux-gnu/libdl.a` on my linux system.
+
+> You might be better off to use **cmake** for such things. But this
+> command can be handy in shell scripts.
 
 
 Executable          | Description
