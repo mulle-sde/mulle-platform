@@ -10,7 +10,8 @@
 **mulle-platform** lets you query the platform for such things like the extension
 of shared libraries or the location of specific libraries.
 
-You are generally better off to use cmake for such things.
+It's used by the other mulle-sde tools. As a standalone tool for build scripts 
+you might be better off to use cmake for such things.
 
 
 Executable          | Description
