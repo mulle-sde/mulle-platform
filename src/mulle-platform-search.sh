@@ -58,22 +58,6 @@ EOF
 }
 
 
-platform_searchpath_usage()
-{
-   [ $# -ne 0 ] && log_error "$1"
-
-   cat <<EOF >&2
-Usage:
-   ${MULLE_USAGE_NAME} ${MULLE_USAGE_COMMAND:-searchpath}
-
-   Show the searchpath used on this platform for finding OS libraries.
-
-Notes:
-   On linux one
-EOF
-   exit 1
-}
-
 _r_platform_search_static_library()
 {
    log_entry "_r_platform_search_static_library" "$@"
@@ -202,39 +186,6 @@ r_platform_search_library()
    return 1
 }
 
-#
-# somewhat dependent on linux to have gcc/clang installed
-#
-r_platform_searchpath()
-{
-   if [ -z "${MULLE_PLATFORM_SEARCHPATH}" ]
-   then
-      case "${MULLE_UNAME}" in
-         linux|windows|mingw)
-            RVAL=""
-
-            local line
-            IFS=':' ; set -f
-            for line in `rexekutor "${CC:-cc}" -Xlinker --verbose  2>/dev/null | \
-                           sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp' | \
-                           egrep -v '^$' `
-            do
-               r_colon_concat "${RVAL}" "${line}"
-            done
-            IFS="${DEFAULT_IFS}" ; set +f
-            MULLE_PLATFORM_SEARCHPATH="${RVAL}"
-         ;;
-
-         *)
-            MULLE_PLATFORM_SEARCHPATH="/usr/local/lib:/usr/lib"
-         ;;
-      esac
-   fi
-
-   RVAL="${MULLE_PLATFORM_SEARCHPATH}"
-   log_verbose "Platform library searchpath: ${RVAL}"
-}
-
 
 r_platform_search()
 {
@@ -242,14 +193,20 @@ r_platform_search()
 
    local searchpath="$1"; shift
 
+   [ -z "${MULLE_PLATFORM_ENVIRONMENT_SH}" ] && \
+      . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
+
    if [ -z "${searchpath}" ]
    then
+      if [ -z "${MULLE_PLATFORM_SEARCHPATH_SH}" ]
+      then
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-searchpath.sh"
+      fi
+
       r_platform_searchpath
       searchpath="${RVAL}"
    fi
 
-   [ -z "${MULLE_PLATFORM_ENVIRONMENT_SH}" ] && \
-      . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
 
    local _libprefix
    local _staticlibsuffix
@@ -280,39 +237,6 @@ r_platform_search()
    return 1
 }
 
-
-platform_searchpath_main()
-{
-   log_entry "platform_searchpath_main" "$@"
-
-   [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
-
-   while [ $# -ne 0 ]
-   do
-      case "$1" in
-         -h*|--help|help)
-            platform_searchpath_usage
-         ;;
-
-         -*)
-            platform_searchpath_usage "Unknown option \"$1\""
-         ;;
-
-         *)
-            break
-         ;;
-      esac
-      shift
-   done
-
-   local name
-   local directory
-
-   [ $# -eq 0 ] || platform_searchpath_usage "Superflous parameters \"$*\""
-
-   r_platform_searchpath
-   echo "${RVAL}"
-}
 
 
 platform_search_main()

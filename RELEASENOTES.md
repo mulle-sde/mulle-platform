@@ -1,3 +1,10 @@
+## 0.3.0
+
+* add searchpath command
+* improved the search command, the default is no longer wholearchive though
+* improved output of linker flags
+
+
 ## 0.2.0
 
 * changed to mulle-bashfunctions 2 call convention
