@@ -30,21 +30,19 @@
 #   POSSIBILITY OF SUCH DAMAGE.
 #
 
-MULLE_PLATFORM_SEARCHPATH_SH="included"
+MULLE_PLATFORM_INCLUDEPATH_SH="included"
 
 
-platform_searchpath_usage()
+platform_includepath_usage()
 {
    [ $# -ne 0 ] && log_error "$1"
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} ${MULLE_USAGE_COMMAND:-searchpath}
+   ${MULLE_USAGE_NAME} ${MULLE_USAGE_COMMAND:-includepath}
 
-   Show the searchpath used on this platform for finding OS libraries.
-
-Notes:
-   On linux one
+   Show the includepath used on this platform for finding headers.
+   For this to work best it is useful to have gcc or clang installed on the system.
 EOF
    exit 1
 }
@@ -53,13 +51,13 @@ EOF
 #
 # somewhat dependent on linux to have gcc/clang installed
 #
-r_platform_searchpath()
+r_platform_includepath()
 {
-   if [ -z "${MULLE_PLATFORM_SEARCHPATH}" ]
+   if [ -z "${MULLE_PLATFORM_INCLUDEPATH}" ]
    then
       case "${MULLE_UNAME}" in
          *)
-            MULLE_PLATFORM_SEARCHPATH="/usr/local/lib:/usr/lib"
+            MULLE_PLATFORM_INCLUDEPATH="/usr/local/include:/usr/include"
          ;;
       esac
 
@@ -72,33 +70,33 @@ r_platform_searchpath()
          cc="`command -v "clang"`"
       fi
 
-      if path="`"${cc:-cc}" -Xlinker --verbose  2>/dev/null`"
+      if path="`"${cc:-cc}" -E -Wp,-v -xc /dev/null 2>&1`"
       then
          path="`echo "${path}" \
-               | sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp'  \
-               | egrep -v '^$' \
+               | sed -n -e '/^ /s/^\ \([^(]*\).*/\1/p' \
                | sed 's/[ \t]*$//' \
+               | egrep -v '/Frameworks$' \
+               | egrep -v '^$' \
                | tr '\012' ':' `"
          path="${path%%:}"
          path="${path##:}"
          if [ ! -z "${path}" ]
          then
-            MULLE_PLATFORM_SEARCHPATH="${path}"
+            MULLE_PLATFORM_INCLUDEPATH="${path}"
          fi
       else
          log_warning "Could not figure out system includes, using platform defaults"
       fi
    fi
 
-   RVAL="${MULLE_PLATFORM_SEARCHPATH}"
-   log_verbose "Platform library searchpath: ${MULLE_PLATFORM_SEARCHPATH}"
+   RVAL="${MULLE_PLATFORM_INCLUDEPATH}"
+   log_verbose "Platform header includepath: ${MULLE_PLATFORM_INCLUDEPATH}"
 }
 
 
-
-platform_searchpath_main()
+platform_includepath_main()
 {
-   log_entry "platform_searchpath_main" "$@"
+   log_entry "platform_includepath_main" "$@"
 
    [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
 
@@ -106,11 +104,11 @@ platform_searchpath_main()
    do
       case "$1" in
          -h*|--help|help)
-            platform_searchpath_usage
+            platform_includepath_usage
          ;;
 
          -*)
-            platform_searchpath_usage "Unknown option \"$1\""
+            platform_includepath_usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -123,8 +121,8 @@ platform_searchpath_main()
    local name
    local directory
 
-   [ $# -eq 0 ] || platform_searchpath_usage "Superflous parameters \"$*\""
+   [ $# -eq 0 ] || platform_includepath_usage "Superflous parameters \"$*\""
 
-   r_platform_searchpath
+   r_platform_includepath
    echo "${RVAL}"
 }

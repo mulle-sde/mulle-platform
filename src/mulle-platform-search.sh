@@ -216,10 +216,10 @@ r_platform_search()
 
    local directory
 
-   IFS=':' ; set -f
+   set -o noglob; IFS=':'
    for directory in ${searchpath}
    do
-      IFS="${DEFAULT_IFS}" ; set +f
+      set +o noglob; IFS="${DEFAULT_IFS}"
 
       if [ -z "${directory}" ]
       then
@@ -231,7 +231,7 @@ r_platform_search()
          return 0
       fi
    done
-   IFS="${DEFAULT_IFS}" ; set +f
+   set +o noglob; IFS="${DEFAULT_IFS}"
 
    RVAL=""
    return 1

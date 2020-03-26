@@ -300,13 +300,13 @@ r_platform_translate_lines()
    local line
 
    RVAL=""
-   IFS=$'\n'; set -f
+   set -o noglob; IFS=$'\n'
    for line in ${lines}
    do
-      IFS="${DEFAULT_IFS}"; set +f
+      set +o noglob; IFS="${DEFAULT_IFS}"
       r_concat "${RVAL}" "${line}" "${separator}"
    done
-   IFS="${DEFAULT_IFS}"; set +f
+   set +o noglob; IFS="${DEFAULT_IFS}"
 }
 
 

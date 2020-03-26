@@ -1,3 +1,8 @@
+## 0.4.0
+
+* new command includepath for header search paths
+
+
 ## 0.3.0
 
 * add searchpath command
