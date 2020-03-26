@@ -55,6 +55,8 @@ EOF
 #
 r_platform_searchpath()
 {
+   log_entry "r_platform_searchpath" "$@"
+
    if [ -z "${MULLE_PLATFORM_SEARCHPATH}" ]
    then
       case "${MULLE_UNAME}" in
@@ -64,21 +66,40 @@ r_platform_searchpath()
       esac
 
       local cc
-      local path
 
-      cc="`command -v "gcc"`"
+      cc="`mudo -f command -v "gcc"`"
       if [ -z "${cc}" ]
       then
-         cc="`command -v "clang"`"
+         cc="`mudo -f command -v "clang"`"
+      else
+         if [ -z "${cc}" ]
+         then
+            cc="`mudo -f command -v "mulle-clang"`"
+         fi
       fi
 
-      if path="`"${cc:-cc}" -Xlinker --verbose  2>/dev/null`"
+      local path
+
+      case "${MULLE_UNAME}" in
+         darwin)
+            path="`xcrun --show-sdk-path`"
+            if [ ! -z "${path}" ]
+            then
+               path="/usr/local/lib:${path}/usr/lib:/usr/lib"
+            fi
+         ;;
+
+         *)
+            path="`rexekutor "${cc:-cc}" -Xlinker --verbose  2>/dev/null \
+                  | sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp'  \
+                  | egrep -v '^$' \
+                  | sed 's/[ \t]*$//' \
+                  | tr '\012' ':' `"
+         ;;
+      esac
+
+      if [ ! -z "${path}" ]
       then
-         path="`echo "${path}" \
-               | sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp'  \
-               | egrep -v '^$' \
-               | sed 's/[ \t]*$//' \
-               | tr '\012' ':' `"
          path="${path%%:}"
          path="${path##:}"
          if [ ! -z "${path}" ]
@@ -86,7 +107,7 @@ r_platform_searchpath()
             MULLE_PLATFORM_SEARCHPATH="${path}"
          fi
       else
-         log_warning "Could not figure out system includes, using platform defaults"
+         log_warning "Could not figure out system library paths, using platform defaults"
       fi
    fi
 

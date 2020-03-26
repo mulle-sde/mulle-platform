@@ -1,3 +1,7 @@
+### 0.4.1
+
+* improve searchpath and includepath
+
 ## 0.4.0
 
 * new command includepath for header search paths

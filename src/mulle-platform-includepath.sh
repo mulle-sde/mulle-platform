@@ -53,6 +53,8 @@ EOF
 #
 r_platform_includepath()
 {
+   log_entry "r_platform_includepath" "$@"
+
    if [ -z "${MULLE_PLATFORM_INCLUDEPATH}" ]
    then
       case "${MULLE_UNAME}" in
@@ -64,13 +66,18 @@ r_platform_includepath()
       local cc
       local path
 
-      cc="`command -v "gcc"`"
+      cc="`mudo -f command -v "gcc"`"
       if [ -z "${cc}" ]
       then
-         cc="`command -v "clang"`"
+         cc="`mudo -f command -v "clang"`"
+      else
+         if [ -z "${cc}" ]
+         then
+            cc="`mudo -f command -v "mulle-clang"`"
+         fi
       fi
 
-      if path="`"${cc:-cc}" -E -Wp,-v -xc /dev/null 2>&1`"
+      if path="`rexekutor "${cc:-cc}" -E -Wp,-v -xc /dev/null 2>&1`"
       then
          path="`echo "${path}" \
                | sed -n -e '/^ /s/^\ \([^(]*\).*/\1/p' \
@@ -85,7 +92,7 @@ r_platform_includepath()
             MULLE_PLATFORM_INCLUDEPATH="${path}"
          fi
       else
-         log_warning "Could not figure out system includes, using platform defaults"
+         log_warning "Could not figure out system include paths, using platform defaults"
       fi
    fi
 
