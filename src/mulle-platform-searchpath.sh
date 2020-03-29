@@ -67,14 +67,14 @@ r_platform_searchpath()
 
       local cc
 
-      cc="`mudo -f command -v "gcc"`"
+      cc="`mudo -f which gcc`"
       if [ -z "${cc}" ]
       then
-         cc="`mudo -f command -v "clang"`"
+         cc="`mudo -f which clang`"
       else
          if [ -z "${cc}" ]
          then
-            cc="`mudo -f command -v "mulle-clang"`"
+            cc="`mudo -f which mulle-clang`"
          fi
       fi
 

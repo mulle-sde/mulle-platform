@@ -55,6 +55,8 @@ r_platform_includepath()
 {
    log_entry "r_platform_includepath" "$@"
 
+   local separator="${1:-:}"
+
    if [ -z "${MULLE_PLATFORM_INCLUDEPATH}" ]
    then
       case "${MULLE_UNAME}" in
@@ -66,14 +68,14 @@ r_platform_includepath()
       local cc
       local path
 
-      cc="`mudo -f command -v "gcc"`"
+      cc="`mudo -f which gcc`"
       if [ -z "${cc}" ]
       then
-         cc="`mudo -f command -v "clang"`"
+         cc="`mudo -f which clang`"
       else
          if [ -z "${cc}" ]
          then
-            cc="`mudo -f command -v "mulle-clang"`"
+            cc="`mudo -f which mulle-clang`"
          fi
       fi
 
@@ -84,7 +86,7 @@ r_platform_includepath()
                | sed 's/[ \t]*$//' \
                | egrep -v '/Frameworks$' \
                | egrep -v '^$' \
-               | tr '\012' ':' `"
+               | tr '\012' "${separator}" `"
          path="${path%%:}"
          path="${path##:}"
          if [ ! -z "${path}" ]
@@ -105,6 +107,8 @@ platform_includepath_main()
 {
    log_entry "platform_includepath_main" "$@"
 
+   local OPTION_SEPARATOR
+
    [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
 
    while [ $# -ne 0 ]
@@ -112,6 +116,10 @@ platform_includepath_main()
       case "$1" in
          -h*|--help|help)
             platform_includepath_usage
+         ;;
+
+         --cmake)
+            OPTION_SEPARATOR=';'
          ;;
 
          -*)
@@ -130,6 +138,6 @@ platform_includepath_main()
 
    [ $# -eq 0 ] || platform_includepath_usage "Superflous parameters \"$*\""
 
-   r_platform_includepath
+   r_platform_includepath "${OPTION_SEPARATOR}"
    echo "${RVAL}"
 }
