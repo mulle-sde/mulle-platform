@@ -1,3 +1,7 @@
+### 0.4.2
+
+* Various small improvements
+
 ### 0.4.1
 
 * improve searchpath and includepath
