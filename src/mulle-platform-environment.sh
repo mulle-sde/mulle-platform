@@ -45,18 +45,24 @@ _platform_get_fix_definitions()
          _libprefix="lib"
          _staticlibsuffix=".a"
          _dynamiclibsuffix=".dylib"
+         _frameworkprefix=""
+         _frameworksuffix=".framework"
       ;;
 
       mingw*)
          _libprefix="lib"
          _staticlibsuffix=".lib"
          _dynamiclibsuffix=".dll"
+         _frameworkprefix=""
+         _frameworksuffix=""
       ;;
 
       *)
          _libprefix="lib"
          _staticlibsuffix=".a"
          _dynamiclibsuffix=".so"
+         _frameworkprefix=""
+         _frameworksuffix=""
       ;;
    esac
 }

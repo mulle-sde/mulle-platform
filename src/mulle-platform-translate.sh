@@ -107,7 +107,13 @@ _r_platform_translate()
          RVAL="${name}"
       ;;
 
-      # emit -l statements
+      #
+      # emit -l statements, or -framework for only-framework marks (hacque)
+      # these marks are added by the linkorder command they are not really
+      # part of the sourcetree, unless it's a system framework. System 
+      # frameworks are not dependencies but libraries. They aren't searched
+      # for here, so only-framework will make the linkorder emit a -framework
+      #
       ld)
          local ldname
 
@@ -117,6 +123,10 @@ _r_platform_translate()
          case ",${marks}," in
             *,no-all-load,*)
                RVAL="${prefix}${ldname#${_libprefix}}"
+            ;;
+
+            *,only-framework,*)
+               RVAL="-framework ${ldname}"
             ;;
 
             *)
@@ -169,8 +179,14 @@ _r_platform_translate()
          esac
       ;;
 
-      # emit -L statements
+      # emit -L statements (and -F statements (hacque))
       ldpath)
+         case ",${marks}," in 
+            *,only-framework,*)
+               prefix="-F"
+            ;;
+         esac
+
          case "${name}" in
             /*)
                r_dirname "${name}"
@@ -227,6 +243,7 @@ _r_platform_translate()
          esac
       ;;
 
+      # DO we need to do something here for frameworks ?
       rpath)
          case "${MULLE_UNAME}" in
             darwin|linux)
@@ -284,7 +301,6 @@ r_platform_translate_lines()
    local name
    local lines
    local csv
-   local marks
 
    lines=""
    for csv in "$@"

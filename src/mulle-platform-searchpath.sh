@@ -82,7 +82,7 @@ r_platform_searchpath()
 
       case "${MULLE_UNAME}" in
          darwin)
-            path="`xcrun --show-sdk-path`"
+            path="`rexekutor xcrun --show-sdk-path`"
             if [ ! -z "${path}" ]
             then
                path="/usr/local/lib:${path}/usr/lib:/usr/lib"

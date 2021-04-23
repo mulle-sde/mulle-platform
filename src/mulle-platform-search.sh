@@ -109,17 +109,21 @@ r_platform_search_library()
 {
    log_entry "r_platform_search_library" "$@"
 
-   local directory="$1"; shift
-   local type="$1"; shift
-   local prefer="$1"; shift
-   local require="$1"; shift
+   [ $# -gt 4 ] || internal_fail "API mismatch"
+
+   local directory="$1"
+   local require="$2"
+   local prefer="$3"
+   local require="$4"
+
+   shift 4
 
    local name
 
    while [ $# -ne 0 ]
    do
       name="$1"
-      [ -z "${name}" ] && fail "empty name is not allowed"
+      [ -z "${name}" ] && internal_fail "empty name is not allowed"
 
       if [  "${type}" = 'standalone' ]
       then
@@ -187,11 +191,45 @@ r_platform_search_library()
 }
 
 
+r_platform_search_framework()
+{
+   log_entry "r_platform_search_framework" "$@"
+
+   [ $# -gt 1 ] || internal_fail "API mismatch"
+
+   local directory="$1"
+   shift 1
+
+   local name
+
+   while [ $# -ne 0 ]
+   do
+      name="$1"
+      [ -z "${name}" ] && internal_fail "empty name is not allowed"
+
+      r_filepath_concat "${directory}" "${_frameworkprefix}${name}${_frameworksuffix}"
+
+      log_fluff "Looking for framework \"${RVAL}\""
+      if [ -d "${RVAL}" ]
+      then
+         log_fluff "Found"
+         return 0
+      fi
+   done 
+
+   return 1
+}
+
+
 r_platform_search()
 {
    log_entry "r_platform_search" "$@"
 
-   local searchpath="$1"; shift
+   local searchpath="$1"
+   local type="$2"
+   local prefer="$3"
+   local require="$4"
+   shift 4
 
    [ -z "${MULLE_PLATFORM_ENVIRONMENT_SH}" ] && \
       . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
@@ -206,7 +244,6 @@ r_platform_search()
       r_platform_searchpath
       searchpath="${RVAL}"
    fi
-
 
    local _libprefix
    local _staticlibsuffix
@@ -226,17 +263,28 @@ r_platform_search()
          continue
       fi
 
-      if r_platform_search_library "${directory}" "$@"
+      if [ "${type}" = "framework" ]
       then
-         return 0
-      fi
+         if r_platform_search_framework "${directory}" "$@"
+         then
+            return 0
+         fi
+      else 
+         if r_platform_search_library "${directory}" \
+                                      "${type}" \
+                                      "${prefer}" \
+                                      "${require}" \
+                                      "$@"
+         then
+            return 0
+         fi
+      fi         
    done
    set +o noglob; IFS="${DEFAULT_IFS}"
 
    RVAL=""
    return 1
 }
-
 
 
 platform_search_main()
@@ -299,7 +347,7 @@ platform_search_main()
 
             OPTION_TYPE="$1"
             case "${OPTION_TYPE}" in
-               library|standalone)
+               library|standalone|framework)
                ;;
 
                *)
