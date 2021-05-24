@@ -100,6 +100,7 @@ _r_platform_translate()
    if [ "${name}" != "${csv}" ]
    then
       marks="${csv#*;}"
+      marks="${marks%%;*}" # superflous
    fi
 
    case "${format}" in
@@ -121,58 +122,84 @@ _r_platform_translate()
          ldname="${RVAL}"
 
          case ",${marks}," in
-            *,no-all-load,*)
-               RVAL="${prefix}${ldname#${_libprefix}}"
-            ;;
-
             *,only-framework,*)
                RVAL="-framework ${ldname}"
             ;;
 
+            *,no-all-load,*)
+               RVAL="${prefix}${ldname#${_libprefix}}"
+            ;;
+
             *)
                RVAL=""
-               case ",${wholearchiveformat}," in
-                  *',whole-archive,'*)
-                     r_concat "${RVAL}" "-Wl,--whole-archive"
-                  ;;
-               esac
+               case "${name}" in 
+                  *${_dynamiclibsuffix})
+                     case ",${wholearchiveformat}," in
+                        *',no-as-needed,'*)
+                           r_concat "${RVAL}" "-Wl,--no-as-needed"
+                        ;;
+                     esac
 
-               case ",${wholearchiveformat}," in
-                  *',no-as-needed,'*)
-                     r_concat "${RVAL}" "-Wl,--no-as-needed"
-                  ;;
-               esac
+                     case ",${wholearchiveformat}," in
+                        *',export-dynamic,'*)
+                           r_concat "${RVAL}" "-Wl,--export-dynamic"
+                        ;;
+                     esac
 
-               case ",${wholearchiveformat}," in
-                  *',export-dynamic,'*)
-                     r_concat "${RVAL}" "-Wl,--export-dynamic"
-                  ;;
-               esac
+                     r_concat "${RVAL}" "${prefix}${ldname#${_libprefix}}"
 
-               case ",${wholearchiveformat}," in
-                  *',whole-archive-win,'*)
-                     RVAL="-WHOLEARCHIVE:${ldname#${_libprefix}}"
-                  ;;
-
-                  *',force-load,'*)
-                     is_absolutepath "${name}" || fail "\"${name}\" must be absolute for -force_load"
-                     RVAL="-force_load ${name}"
+                     case ",${wholearchiveformat}," in
+                        *',no-as-needed,'*)
+                           r_concat "${RVAL}" "-Wl,--as-needed"
+                        ;;
+                     esac
                   ;;
 
                   *)
-                     r_concat "${RVAL}" "${prefix}${ldname#${_libprefix}}"
-                  ;;
-               esac
+                     case ",${wholearchiveformat}," in
+                        *',whole-archive,'*)
+                           r_concat "${RVAL}" "-Wl,--whole-archive"
+                        ;;
+                     esac
 
-               case ",${wholearchiveformat}," in
-                  *',no-as-needed,'*)
-                     r_concat "${RVAL}" "-Wl,--as-needed"
-                  ;;
-               esac
+                     case ",${wholearchiveformat}," in
+                        *',no-as-needed,'*)
+                           r_concat "${RVAL}" "-Wl,--no-as-needed"
+                        ;;
+                     esac
 
-               case ",${wholearchiveformat}," in
-                  *',whole-archive,'*)
-                     r_concat "${RVAL}" "-Wl,--no-whole-archive"
+                     case ",${wholearchiveformat}," in
+                        *',export-dynamic,'*)
+                           r_concat "${RVAL}" "-Wl,--export-dynamic"
+                        ;;
+                     esac
+
+                     case ",${wholearchiveformat}," in
+                        *',whole-archive-win,'*)
+                           RVAL="-WHOLEARCHIVE:${ldname#${_libprefix}}"
+                        ;;
+
+                        *',force-load,'*)
+                           is_absolutepath "${name}" || fail "\"${name}\" must be absolute for -force_load"
+                           RVAL="-force_load ${name}"
+                        ;;
+
+                        *)
+                           r_concat "${RVAL}" "${prefix}${ldname#${_libprefix}}"
+                        ;;
+                     esac
+
+                     case ",${wholearchiveformat}," in
+                        *',no-as-needed,'*)
+                           r_concat "${RVAL}" "-Wl,--as-needed"
+                        ;;
+                     esac
+
+                     case ",${wholearchiveformat}," in
+                        *',whole-archive,'*)
+                           r_concat "${RVAL}" "-Wl,--no-whole-archive"
+                        ;;
+                     esac
                   ;;
                esac
             ;;

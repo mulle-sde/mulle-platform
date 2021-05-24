@@ -215,7 +215,8 @@ r_platform_search_framework()
          log_fluff "Found"
          return 0
       fi
-   done 
+      shift
+   done
 
    return 1
 }
@@ -269,7 +270,7 @@ r_platform_search()
          then
             return 0
          fi
-      else 
+      else
          if r_platform_search_library "${directory}" \
                                       "${type}" \
                                       "${prefer}" \
@@ -278,7 +279,7 @@ r_platform_search()
          then
             return 0
          fi
-      fi         
+      fi
    done
    set +o noglob; IFS="${DEFAULT_IFS}"
 

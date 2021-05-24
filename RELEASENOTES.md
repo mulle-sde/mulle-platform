@@ -1,3 +1,8 @@
+## 0.5.0
+
+* supports Frameworks now
+
+
 ### 0.4.2
 
 * Various small improvements
