@@ -1,6 +1,6 @@
 ## 0.5.0
 
-* supports Frameworks now
+* Various small improvements
 
 
 ### 0.4.2
