@@ -78,19 +78,19 @@ r_platform_searchpath()
          fi
       fi
 
-      local path
+      local filepath
 
       case "${MULLE_UNAME}" in
          darwin)
-            path="`rexekutor xcrun --show-sdk-path`"
-            if [ ! -z "${path}" ]
+            filepath="`rexekutor xcrun --show-sdk-path`"
+            if [ ! -z "${filepath}" ]
             then
-               path="/usr/local/lib:${path}/usr/lib:/usr/lib"
+               filepath="/usr/local/lib:${filepath}/usr/lib:/usr/lib"
             fi
          ;;
 
          *)
-            path="`rexekutor "${cc:-cc}" -Xlinker --verbose  2>/dev/null \
+            filepath="`rexekutor "${cc:-cc}" -Xlinker --verbose  2>/dev/null \
                   | sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp'  \
                   | egrep -v '^$' \
                   | sed 's/[ \t]*$//' \
@@ -98,13 +98,13 @@ r_platform_searchpath()
          ;;
       esac
 
-      if [ ! -z "${path}" ]
+      if [ ! -z "${filepath}" ]
       then
-         path="${path%%:}"
-         path="${path##:}"
-         if [ ! -z "${path}" ]
+         filepath="${filepath%%:}"
+         filepath="${filepath##:}"
+         if [ ! -z "${filepath}" ]
          then
-            MULLE_PLATFORM_SEARCHPATH="${path}"
+            MULLE_PLATFORM_SEARCHPATH="${filepath}"
          fi
       else
          log_warning "Could not figure out system library paths, using platform defaults"

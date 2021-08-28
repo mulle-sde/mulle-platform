@@ -66,7 +66,7 @@ r_platform_includepath()
       esac
 
       local cc
-      local path
+      local filepath
 
       cc="`mudo -f which gcc`"
       if [ -z "${cc}" ]
@@ -79,19 +79,19 @@ r_platform_includepath()
          fi
       fi
 
-      if path="`rexekutor "${cc:-cc}" -E -Wp,-v -xc /dev/null 2>&1`"
+      if filepath="`rexekutor "${cc:-cc}" -E -Wp,-v -xc /dev/null 2>&1`"
       then
-         path="`echo "${path}" \
+         filepath="`echo "${filepath}" \
                | sed -n -e '/^ /s/^\ \([^(]*\).*/\1/p' \
                | sed 's/[ \t]*$//' \
                | egrep -v '/Frameworks$' \
                | egrep -v '^$' \
                | tr '\012' "${separator}" `"
-         path="${path%%:}"
-         path="${path##:}"
-         if [ ! -z "${path}" ]
+         filepath="${filepath%%:}"
+         filepath="${filepath##:}"
+         if [ ! -z "${filepath}" ]
          then
-            MULLE_PLATFORM_INCLUDEPATH="${path}"
+            MULLE_PLATFORM_INCLUDEPATH="${filepath}"
          fi
       else
          log_warning "Could not figure out system include paths, using platform defaults"
