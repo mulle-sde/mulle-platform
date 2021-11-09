@@ -65,7 +65,7 @@ _r_platform_search_static_library()
    local directory="$1"
    local name="$2"
 
-   r_filepath_concat "${directory}" "${_libprefix}${name}${_staticlibsuffix}"
+   r_filepath_concat "${directory}" "${_prefix_lib}${name}${_suffix_staticlib}"
 
    log_fluff "Looking for static library \"${RVAL}\""
 
@@ -80,7 +80,7 @@ _r_platform_search_dynamic_library()
    local directory="$1"
    local name="$2"
 
-   r_filepath_concat "${directory}" "${_libprefix}${name}${_dynamiclibsuffix}"
+   r_filepath_concat "${directory}" "${_prefix_lib}${name}${_dynamiclibsuffix}"
 
    log_fluff "Looking for dynamic library \"${RVAL}\""
 
@@ -207,7 +207,7 @@ r_platform_search_framework()
       name="$1"
       [ -z "${name}" ] && internal_fail "empty name is not allowed"
 
-      r_filepath_concat "${directory}" "${_frameworkprefix}${name}${_frameworksuffix}"
+      r_filepath_concat "${directory}" "${_prefix_framework}${name}${_suffix_framework}"
 
       log_fluff "Looking for framework \"${RVAL}\""
       if [ -d "${RVAL}" ]
@@ -246,11 +246,16 @@ r_platform_search()
       searchpath="${RVAL}"
    fi
 
-   local _libprefix
-   local _staticlibsuffix
    local _dynamiclibsuffix
+   local _prefix_framework
+   local _suffix_framework
+   local _option_libpath
+   local _prefix_lib
+   local _option_linklib
+   local _suffix_staticlib
+   local _option_link_mode
 
-   _platform_get_fix_definitions
+   __platform_get_fix_definitions
 
    local directory
 

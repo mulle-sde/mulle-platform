@@ -101,7 +101,7 @@ print_commands()
    search        : search for an OS library
    includepath   : print path for OS headers
    searchpath    : print searchpath for OS libraries
-   translate     : trab
+   translate     : translate link commands
    wholearchive  : produce linker command for whole archive linking
 "
 

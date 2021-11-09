@@ -34,39 +34,65 @@ MULLE_PLATFORM_ENVIRONMENT_SH="included"
 
 
 #
-# local _libprefix
-# local _staticlibsuffix
-# local _dynamiclibsuffix
+# local _option_frameworkpath
+# local _option_libpath
+# local _option_link_mode
+# local _option_linklib
+# local _prefix_framework
+# local _prefix_lib
+# local _suffix_dynamiclib
+# local _suffix_framework
+# local _suffix_staticlib
 #
-_platform_get_fix_definitions()
+__platform_get_fix_definitions()
 {
+   log_entry "__platform_get_fix_definitions" "$@"
+
+   _option_frameworkpath=""
+   _option_libpath="-L"
+   _option_linklib="-l"
+   _prefix_framework=""
+   _prefix_lib="lib"
+   _option_link_mode="basename,no-suffix"
+   _suffix_dynamiclib=".so"
+   _suffix_framework=""
+   _suffix_staticlib=".a"
+
    case "${MULLE_UNAME}" in
       darwin)
-         _libprefix="lib"
-         _staticlibsuffix=".a"
-         _dynamiclibsuffix=".dylib"
-         _frameworkprefix=""
-         _frameworksuffix=".framework"
+         _option_frameworkpath="-F"
+         _suffix_dynamiclib=".dylib"
+         _suffix_framework=".framework"
       ;;
 
       mingw*)
-         _libprefix="lib"
-         _staticlibsuffix=".lib"
-         _dynamiclibsuffix=".dll"
-         _frameworkprefix=""
-         _frameworksuffix=""
-      ;;
-
-      *)
-         _libprefix="lib"
-         _staticlibsuffix=".a"
-         _dynamiclibsuffix=".so"
-         _frameworkprefix=""
-         _frameworksuffix=""
+         _option_libpath="-libpath:" # space is important
+         _option_linklib=""
+         _prefix_lib=""
+         _strip_suffix="NO"
+         _suffix_dynamiclib=".dll"
+         _suffix_staticlib=".lib"
+         _option_link_mode="basename,no-suffix,add-suffix-staticlib"
       ;;
    esac
 }
 
 
+r_platform_default_whole_archive_format()
+{
+   log_entry "r_platform_default_whole_archive_format" "$@"
 
+   case "${MULLE_UNAME}" in
+      mingw*)
+         RVAL="whole-archive-win"
+      ;;
 
+      darwin)
+         RVAL="force-load"
+      ;;
+
+      *)
+         RVAL="whole-archive,no-as-needed,export-dynamic"
+      ;;
+   esac
+}
