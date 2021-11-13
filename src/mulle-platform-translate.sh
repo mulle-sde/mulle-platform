@@ -408,14 +408,16 @@ _r_platform_translate_rpath()
    log_entry "_r_platform_translate_rpath" "$@"
 
    local dynamiclibsuffix="$1"   # _suffix_dynamiclib (.so)
-   local r_path_mangler="$2"
-   local csv="$3"
+   local option_rpath="$2"
+   local r_path_mangler="$3"
+   local csv="$4"
 
    local name
    local lines
    local marks
 
    RVAL=
+
    name="${csv%%;*}"
    if [ -z "${name}" ]
    then
@@ -429,6 +431,7 @@ _r_platform_translate_rpath()
             /*${dynamiclibsuffix})
                r_dirname "${name}"
                ${r_path_mangler} "${RVAL}"
+               RVAL="${option_rpath}${RVAL}"
             ;;
 
             *)
@@ -474,6 +477,7 @@ _r_platform_translate_lines()
    local _suffix_framework
    local _option_libpath
    local _option_frameworkpath
+   local _option_rpath
    local _prefix_lib
    local _option_linklib
    local _suffix_staticlib
@@ -496,6 +500,7 @@ _r_platform_translate_lines()
       wholearchiveformat="${RVAL}"
    fi
 
+   local line
 
    lines=""
    for csv in "$@"
@@ -539,6 +544,7 @@ _r_platform_translate_lines()
          rpath)
             _r_platform_translate_rpath \
                                   "${_suffix_dynamiclib}" \
+                                  "${_option_rpath}" \
                                   "${_r_path_mangler}" \
                                   "${csv}"
          ;;
@@ -547,12 +553,12 @@ _r_platform_translate_lines()
             internal_fail "unknown format \"${format}\""
          ;;
       esac
+      line="${RVAL}"
 
-      r_add_unique_line "${lines}" "${RVAL}"
+      log_debug "add: $format :: $csv -> $line"
+      r_add_unique_line "${lines}" "${line}"
       lines="${RVAL}"
    done
-
-   local line
 
    RVAL=""
    shell_disable_glob; IFS=$'\n'

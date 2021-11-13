@@ -106,6 +106,7 @@ print_commands()
 "
 
    HIDDEN_COMMANDS="\
+   sdkpath     : print SDK path
    libexec-dir : print path to mulle-platform libexec
    uname       : mulle-platforms simplified uname(1)
    version     : print mulle-platform version"
@@ -232,6 +233,13 @@ main()
          . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-includepath.sh"
 
          platform_includepath_main "$@"
+      ;;
+
+      'sdkpath')
+         # shellcheck source=src/mulle-platform-sdkpath.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-sdkpath.sh"
+
+         platform_sdkpath_main "$@"
       ;;
 
       'search')

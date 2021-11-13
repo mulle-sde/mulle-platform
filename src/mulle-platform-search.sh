@@ -58,6 +58,7 @@ EOF
 }
 
 
+# some values are passed in via global vars!
 _r_platform_search_static_library()
 {
    log_entry "_r_platform_search_static_library" "$@"
@@ -73,6 +74,7 @@ _r_platform_search_static_library()
 }
 
 
+# some values are passed in via global vars!
 _r_platform_search_dynamic_library()
 {
    log_entry "_r_platform_search_dynamic_library" "$@"
@@ -80,7 +82,7 @@ _r_platform_search_dynamic_library()
    local directory="$1"
    local name="$2"
 
-   r_filepath_concat "${directory}" "${_prefix_lib}${name}${_dynamiclibsuffix}"
+   r_filepath_concat "${directory}" "${_prefix_lib}${name}${_suffix_dynamiclib}"
 
    log_fluff "Looking for dynamic library \"${RVAL}\""
 
@@ -88,15 +90,21 @@ _r_platform_search_dynamic_library()
 }
 
 
-r_platform_search_library_type()
+# some values are passed in via global vars!
+_r_platform_search_library_type()
 {
-   log_entry "r_platform_search_library_type" "$@"
+   log_entry "_r_platform_search_library_type" "$@"
 
    local type="$1"
    local directory="$2"
    local name="$3"
+   local prefix="$4"
+   local suffix="$5"
 
-   if _r_platform_search_${type}_library "${directory}" "${name}"
+   if "_r_platform_search_${type}_library" "${directory}" \
+                                           "${name}" \
+                                           "${prefix}" \
+                                           "${suffix}"
    then
       log_fluff "Found"
       return 0
@@ -105,9 +113,10 @@ r_platform_search_library_type()
 }
 
 
-r_platform_search_library()
+# some values are passed in via global vars!
+_r_platform_search_library()
 {
-   log_entry "r_platform_search_library" "$@"
+   log_entry "_r_platform_search_library" "$@"
 
    [ $# -gt 4 ] || internal_fail "API mismatch"
 
@@ -127,8 +136,8 @@ r_platform_search_library()
 
       if [  "${type}" = 'standalone' ]
       then
-         if r_platform_search_library_type "dynamic" "${directory}" \
-                                                     "${name}-standalone"
+         if _r_platform_search_library_type "dynamic" "${directory}" \
+                                                      "${name}-standalone"
          then
             return 0
          fi
@@ -137,8 +146,8 @@ r_platform_search_library()
          # if we build everything as shared libraries then we don't
          # need a -standalone library
          #
-         if r_platform_search_library_type "dynamic" "${directory}" \
-                                                     "${name}"
+         if _r_platform_search_library_type "dynamic" "${directory}" \
+                                                      "${name}"
          then
             return 0
          fi
@@ -149,8 +158,8 @@ r_platform_search_library()
 
       if [ ! -z "${require}" ]
       then
-         if r_platform_search_library_type "${require}" "${directory}" \
-                                                        "${name}"
+         if _r_platform_search_library_type "${require}" "${directory}" \
+                                                         "${name}"
          then
             return 0
          fi
@@ -172,14 +181,14 @@ r_platform_search_library()
          ;;
       esac
 
-      if r_platform_search_library_type "${first_type}" "${directory}" \
-                                                        "${name}"
+      if _r_platform_search_library_type "${first_type}" "${directory}" \
+                                                         "${name}"
       then
          return 0
       fi
 
-      if r_platform_search_library_type "${second_type}" "${directory}" \
-                                                         "${name}"
+      if _r_platform_search_library_type "${second_type}" "${directory}" \
+                                                          "${name}"
       then
          return 0
       fi
@@ -191,7 +200,9 @@ r_platform_search_library()
 }
 
 
-r_platform_search_framework()
+# some values are passed in via global vars!
+#
+_r_platform_search_framework()
 {
    log_entry "r_platform_search_framework" "$@"
 
@@ -232,28 +243,26 @@ r_platform_search()
    local require="$4"
    shift 4
 
-   [ -z "${MULLE_PLATFORM_ENVIRONMENT_SH}" ] && \
-      . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
+   include_mulle_tool_library "platform" "environment"
 
    if [ -z "${searchpath}" ]
    then
-      if [ -z "${MULLE_PLATFORM_SEARCHPATH_SH}" ]
-      then
-         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-searchpath.sh"
-      fi
+      include_mulle_tool_library "platform" "searchpath"
 
       r_platform_searchpath
       searchpath="${RVAL}"
    fi
 
-   local _dynamiclibsuffix
-   local _prefix_framework
-   local _suffix_framework
+   local _option_frameworkpath
    local _option_libpath
-   local _prefix_lib
-   local _option_linklib
-   local _suffix_staticlib
    local _option_link_mode
+   local _option_linklib
+   local _option_rpath
+   local _prefix_framework
+   local _prefix_lib
+   local _suffix_dynamiclib
+   local _suffix_framework
+   local _suffix_staticlib
    local _r_path_mangler
 
    __platform_get_fix_definitions
@@ -272,16 +281,17 @@ r_platform_search()
 
       if [ "${type}" = "framework" ]
       then
-         if r_platform_search_framework "${directory}" "$@"
+         if _r_platform_search_framework "${directory}" \
+                                         "$@"
          then
             return 0
          fi
       else
-         if r_platform_search_library "${directory}" \
-                                      "${type}" \
-                                      "${prefer}" \
-                                      "${require}" \
-                                      "$@"
+         if _r_platform_search_library "${directory}" \
+                                       "${type}" \
+                                       "${prefer}" \
+                                       "${require}" \
+                                       "$@"
          then
             return 0
          fi

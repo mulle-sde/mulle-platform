@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 #
-#   Copyright (c) 2018 nat -
+#   Copyright (c) 2021 Nat! - Mulle kybernetiK
 #   All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
@@ -13,7 +13,7 @@
 #   this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
 #
-#   Neither the name of  nor the names of its contributors
+#   Neither the name of Mulle kybernetiK nor the names of its contributors
 #   may be used to endorse or promote products derived from this software
 #   without specific prior written permission.
 #
@@ -29,94 +29,72 @@
 #   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #   POSSIBILITY OF SUCH DAMAGE.
 #
+MULLE_PLATFORM_FLAGS_SH="included"
 
-MULLE_PLATFORM_ENVIRONMENT_SH="included"
 
-
-r_mulle_nomangle()
+r_cc_include_dir()
 {
-   RVAL="$1"
-}
-
-
-#
-# local _option_frameworkpath
-# local _option_libpath
-# local _option_rpath
-# local _option_link_mode
-# local _option_linklib
-# local _prefix_framework
-# local _prefix_lib
-# local _suffix_dynamiclib
-# local _suffix_framework
-# local _suffix_staticlib
-# local _r_path_mangler
-#
-__platform_get_fix_definitions()
-{
-   log_entry "__platform_get_fix_definitions" "$@"
-
-   _option_frameworkpath=""
-   _option_libpath="-L"
-   _option_linklib="-l"
-   _option_rpath="-Wl,-rpath=" # space keep
-   _prefix_framework=""
-   _prefix_lib="lib"
-   _option_link_mode="basename,no-suffix"
-   _suffix_dynamiclib=".so"
-   _suffix_framework=""
-   _suffix_staticlib=".a"
-
-   case "${MULLE_UNAME}" in
-      darwin)
-         _option_frameworkpath="-F"
-         _suffix_dynamiclib=".dylib"
-         _suffix_framework=".framework"
-      ;;
-
-      mingw*|windows)
-         _option_rpath=""
-         _option_libpath="-libpath:" # no space is important
-         _option_linklib=""
-         _prefix_lib=""
-         _strip_suffix="NO"
-         _suffix_dynamiclib=".dll"
-         _suffix_staticlib=".lib"
-         _option_link_mode="basename,no-suffix,add-suffix-staticlib"
-      ;;
-   esac
+   local dir="$1"
+   local quote="$2"
 
    case "${MULLE_UNAME}" in
       windows)
          include_mulle_tool_library "platform" "wsl"
 
-         _r_path_mangler=r_mulle_wslpath
+         r_mulle_wslpath "${dir}"
+         RVAL="/I${quote}${RVAL}${quote}"
       ;;
 
       *)
-         include_mulle_tool_library "platform" "mingw"
-
-         _r_path_mangler=r_mulle_nomangle
+         RVAL="-I${quote}${dir}${quote}"
       ;;
    esac
 }
 
 
-r_platform_default_whole_archive_format()
+r_cc_output_object_filename()
 {
-   log_entry "r_platform_default_whole_archive_format" "$@"
+   local filename="$1"
+   local quote="$2"
 
    case "${MULLE_UNAME}" in
-      mingw*|windows)
-         RVAL="whole-archive-win"
+      windows)
+         include_mulle_tool_library "platform" "wsl"
+
+         r_mulle_wslpath "${filename}"
+         RVAL="/Fo${quote}${RVAL}${quote}"
       ;;
 
-      darwin)
-         RVAL="force-load"
+      mingw)
+         RVAL="-Fo${quote}${filename}${quote}"
       ;;
 
       *)
-         RVAL="whole-archive,no-as-needed,export-dynamic"
+         RVAL="-o ${quote}${filename}${quote}"
+      ;;
+   esac
+}
+
+
+r_cc_output_exe_filename()
+{
+   local filename="$1"
+   local quote="$2"
+
+   case "${MULLE_UNAME}" in
+      windows)
+         include_mulle_tool_library "platform" "wsl"
+
+         r_mulle_wslpath "${filename}"
+         RVAL="/Fe${quote}${RVAL}${quote}"
+      ;;
+
+      mingw)
+         RVAL="-Fe${quote}`cygpath -w "${filename}"`${quote}"
+      ;;
+
+      *)
+         RVAL="-o ${quote}${filename}${quote}"
       ;;
    esac
 }
