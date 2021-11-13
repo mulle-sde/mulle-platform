@@ -33,6 +33,30 @@
 MULLE_PLATFORM_ENVIRONMENT_SH="included"
 
 
+r_mulle_nomangle()
+{
+   RVAL="$1"
+}
+
+
+# fix for wslpath needing an existing file
+r_mulle_wslpath()
+{
+   if [ ! -e "$1" ]
+   then
+      r_dirname "$1"
+      r_mulle_wslpath "${RVAL}"
+      tmp="${RVAL}"
+
+      r_basename "$1"
+      RVAL="${tmp}\\${RVAL}"
+      return 
+   fi
+
+   RVAL="`wslpath -w "$1" `"
+}
+
+
 #
 # local _option_frameworkpath
 # local _option_libpath
@@ -43,6 +67,7 @@ MULLE_PLATFORM_ENVIRONMENT_SH="included"
 # local _suffix_dynamiclib
 # local _suffix_framework
 # local _suffix_staticlib
+# local _r_path_mangler
 #
 __platform_get_fix_definitions()
 {
@@ -65,7 +90,7 @@ __platform_get_fix_definitions()
          _suffix_framework=".framework"
       ;;
 
-      mingw*)
+      mingw*|windows)
          _option_libpath="-libpath:" # space is important
          _option_linklib=""
          _prefix_lib=""
@@ -73,6 +98,16 @@ __platform_get_fix_definitions()
          _suffix_dynamiclib=".dll"
          _suffix_staticlib=".lib"
          _option_link_mode="basename,no-suffix,add-suffix-staticlib"
+      ;;
+   esac
+
+   case "${MULLE_UNAME}" in
+      windows)
+         _r_path_mangler=r_mulle_wslpath
+      ;;
+
+      *)
+         _r_path_mangler=r_mulle_nomangle
       ;;
    esac
 }

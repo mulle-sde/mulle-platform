@@ -44,12 +44,55 @@ Usage:
    Show the searchpath used on this platform for finding OS libraries.
 
 Notes:
-   On linux one
+   Works on linux on darwin.
+
 EOF
    exit 1
 }
 
 
+# the Windows SDK is added to our PATH so we scour the path
+# and deduce the lib directory from it
+r_windows_library_filepath()
+{
+   local directory
+   local arch
+   local version
+
+   IFS=":"
+   for directory in ${PATH}
+   do
+      IFS="${DEFAULT_IFS}"
+      case "${directory}" in 
+         *[/\\]Windows\ Kits[/\\]*)
+            # either 
+            # /mnt/c/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x86
+            # /mnt/c/Program Files (x86)/Windows Kits/10/bin/x86            
+            r_basename "${directory}"
+            arch="${RVAL}"
+            r_dirname "${directory}" 
+            directory="${RVAL}"           
+            r_basename "${directory}"
+            if [ "${RVAL}" = "bin" ]
+            then
+               continue
+            fi
+            version="${RVAL}"
+
+            #  /mnt/c/Program\ Files\ \(x86\)/Windows\ Kits/10/Lib/10.0.18362.0/um/x64            
+            r_dirname "${directory}"  # get to ../10
+            r_dirname "${RVAL}"  # get to ../10
+            RVAL="${RVAL}/Lib/${version}/um/${arch}"
+            return 0
+         ;;
+      esac
+   done
+   IFS="${DEFAULT_IFS}"
+
+   log_warning "Windows SDK not found in PATH"
+   RVAL=
+   return 1
+}
 #
 # somewhat dependent on linux to have gcc/clang installed
 #
@@ -59,24 +102,28 @@ r_platform_searchpath()
 
    if [ -z "${MULLE_PLATFORM_SEARCHPATH}" ]
    then
-      case "${MULLE_UNAME}" in
-         *)
-            MULLE_PLATFORM_SEARCHPATH="/usr/local/lib:/usr/lib"
-         ;;
-      esac
-
       local cc
 
-      cc="`mudo -f which gcc`"
-      if [ -z "${cc}" ]
-      then
-         cc="`mudo -f which clang`"
-      else
-         if [ -z "${cc}" ]
-         then
-            cc="`mudo -f which mulle-clang`"
-         fi
-      fi
+      case "${MULLE_UNAME}" in
+         mingw|windows)
+            cc="`mudo -f which mulle-clang-cl.exe`"
+         ;;
+
+         *)
+            MULLE_PLATFORM_SEARCHPATH="/usr/local/lib:/usr/lib"
+
+            cc="`mudo -f which gcc`"
+            if [ -z "${cc}" ]
+            then
+               cc="`mudo -f which clang`"
+            else
+               if [ -z "${cc}" ]
+               then
+                  cc="`mudo -f which mulle-clang`"
+               fi
+            fi
+         ;;
+      esac
 
       local filepath
 
@@ -87,6 +134,14 @@ r_platform_searchpath()
             then
                filepath="/usr/local/lib:${filepath}/usr/lib:/usr/lib"
             fi
+         ;;
+
+         windows|mingw)
+            # it's something like
+            #  /mnt/c/Program\ Files\ \(x86\)/Windows\ Kits/10/Lib/10.0.18362.0/um/x64            
+            # how do we get this ? well...
+            r_windows_library_filepath 
+            filepath="${RVAL}"
          ;;
 
          *)

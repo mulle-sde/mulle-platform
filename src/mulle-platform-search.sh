@@ -254,6 +254,7 @@ r_platform_search()
    local _option_linklib
    local _suffix_staticlib
    local _option_link_mode
+   local _r_path_mangler
 
    __platform_get_fix_definitions
 

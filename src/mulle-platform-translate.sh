@@ -252,14 +252,16 @@ _r_platform_translate_ldpath()
 {
    log_entry "_r_platform_translate_ldpath" "$@"
 
-   local option_library="$1" # _option_linklib (-l)
+   local option_library="$1"      # _option_linklib (-l)
    local option_framework="$2"    # _suffix_staticlib (.a)
-   local csv="$3"
+   local r_path_mangler="$3"
+   local csv="$4"
 
    local name
    local marks
 
    RVAL=
+
    name="${csv%%;*}"
    if [ -z "${name}" ]
    then
@@ -286,6 +288,7 @@ _r_platform_translate_ldpath()
    case "${name}" in
       /*)
          r_dirname "${name}"
+         ${r_path_mangler} "${RVAL}"
          RVAL="${option}${RVAL}"
       ;;
 
@@ -303,16 +306,19 @@ _r_platform_translate_ldpath()
    fi
 }
 
+
 _r_platform_translate_ld_library_path()
 {
    log_entry "_r_platform_translate_ld_library_path" "$@"
 
    local dynamiclibsuffix="$1"   # _suffix_dynamiclib (.so)
-   local csv="$2"
+   local r_path_mangler="$2"
+   local csv="$3"
 
    local name
 
    RVAL=
+
    name="${csv%%;*}"
    if [ -z "${name}" ]
    then
@@ -330,6 +336,7 @@ _r_platform_translate_ld_library_path()
          case "${name}" in
             /*${dynamiclibsuffix})
                r_dirname "${name}"
+               ${r_path_mangler} "${RVAL}"
             ;;
 
             *)
@@ -353,11 +360,13 @@ _r_platform_translate_path()
    log_entry "_r_platform_translate_path" "$@"
 
    local dynamiclibsuffix="$1"   # _suffix_dynamiclib (.so)
-   local csv="$2"
+   local r_path_mangler="$2"
+   local csv="$3"
 
    local name
 
    RVAL=
+
    name="${csv%%;*}"
    if [ -z "${name}" ]
    then
@@ -370,6 +379,7 @@ _r_platform_translate_path()
          case "${name}" in
             /*${dynamiclibsuffix})
                r_dirname "${name}"
+               ${r_path_mangler} "${RVAL}"
             ;;
 
             *)
@@ -398,7 +408,8 @@ _r_platform_translate_rpath()
    log_entry "_r_platform_translate_rpath" "$@"
 
    local dynamiclibsuffix="$1"   # _suffix_dynamiclib (.so)
-   local csv="$2"
+   local r_path_mangler="$2"
+   local csv="$3"
 
    local name
    local lines
@@ -417,6 +428,7 @@ _r_platform_translate_rpath()
          case "${name}" in
             /*${dynamiclibsuffix})
                r_dirname "${name}"
+               ${r_path_mangler} "${RVAL}"
             ;;
 
             *)
@@ -466,6 +478,7 @@ _r_platform_translate_lines()
    local _option_linklib
    local _suffix_staticlib
    local _option_link_mode
+   local _r_path_mangler
 
    __platform_get_fix_definitions
 
@@ -507,22 +520,26 @@ _r_platform_translate_lines()
             _r_platform_translate_ldpath  \
                                   "${_option_libpath}" \
                                   "${_option_frameworkpath}" \
+                                  "${_r_path_mangler}" \
                                   "${csv}"
          ;;
 
          ld_library_path)
             _r_platform_translate_ld_library_path \
                                   "${_suffix_dynamiclib}" \
+                                  "${_r_path_mangler}" \
                                   "${csv}"
          ;;
          path)
             _r_platform_translate_path  \
                                   "${_suffix_dynamiclib}" \
+                                  "${_r_path_mangler}" \
                                   "${csv}"
          ;;
          rpath)
             _r_platform_translate_rpath \
                                   "${_suffix_dynamiclib}" \
+                                  "${_r_path_mangler}" \
                                   "${csv}"
          ;;
 
@@ -564,7 +581,6 @@ r_platform_translate_lines()
 }
 
 
-
 platform_default_wholearchive_format()
 {
    r_platform_default_whole_archive_format
@@ -584,7 +600,6 @@ platform_translate_main()
    local OPTION_MODE="DEFAULT"
    local OPTION_WHOLE_ARCHIVE_FORMAT="none"
    local OPTION_SEPARATOR=$'\n'
-
 
    while [ $# -ne 0 ]
    do
