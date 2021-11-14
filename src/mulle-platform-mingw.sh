@@ -73,7 +73,7 @@ find_msvc_executable()
             executable="${filepath}/${exe}"
             if [ -x "${executable}" ]
             then
-               echo "MSVC ${name} found as ${executable}" >&2
+               # echo "MSVC ${name} found as ${executable}" >&2
                printf "%s\n" "${executable}"
                break
             fi
