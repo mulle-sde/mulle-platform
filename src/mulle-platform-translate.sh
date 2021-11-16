@@ -173,7 +173,7 @@ _r_platform_translate_ld_static()
    local result
 
    # this can be useful if the resultant product is a shared library
-   # probably stupid though, should be set elsewhere once
+   # for example. Needed to get dlsym working
    case ",${wholearchiveformat}," in
      *',export-dynamic,'*)
         r_concat "${result}" "-Wl,--export-dynamic"
