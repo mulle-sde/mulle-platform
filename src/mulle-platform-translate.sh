@@ -264,7 +264,6 @@ _r_platform_translate_ld_dynamic()
       ;;
    esac
 
-   ## default !!
    r_concat "${result}" "${option}${ldname#${prefix}}"
    result="${RVAL}"
 

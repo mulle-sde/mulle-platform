@@ -299,6 +299,12 @@ main()
 ###
 ### INIT
 ###
+_fatal()
+{
+   echo "$0 fatal error: $*" >&2
+   exit 1
+}
+
 _init()
 {
    #
@@ -318,20 +324,17 @@ _init()
       then
          if [ -z "`command -v 'mulle-bashfunctions-env'`" ]
          then
-            echo "Fatal Error: Could not find mulle-bashfunctions-env in PATH ($PATH) - mulle-bashfunctions not installed ?" >&2
+            _fatal "mulle-bashfunctions-env not installed"
          else
-            echo "Fatal Error: Could not find libexec-dir of mulle-bashfunctions-env (${PWD#${MULLE_USER_PWD}/})" >&2
+            _fatal "Could not find libexec-dir of mulle-bashfunctions-env"
          fi
          exit 1
       fi
    fi
 
       # shellcheck source=../mulle-bashfunctions/src/mulle-string.sh
-   . "${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-bashfunctions.sh" "minimal" &&
-   . "${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-path.sh" &&
-   . "${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-file.sh" ||
-      fail "failed to load bashfunctions from ${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}"
-
+   . "${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-bashfunctions.sh" ||
+      _fatal "failed to load bashfunctions from ${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}"
    ### *** ###
 
    if [ -z "${MULLE_PLATFORM_LIBEXEC_DIR}" ]
