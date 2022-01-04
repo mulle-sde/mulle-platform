@@ -33,7 +33,7 @@
 MULLE_PLATFORM_SEARCHPATH_SH="included"
 
 
-platform_searchpath_usage()
+platform::searchpath::usage()
 {
    [ $# -ne 0 ] && log_error "$1"
 
@@ -53,7 +53,7 @@ EOF
 
 # the Windows SDK is added to our PATH so we scour the path
 # and deduce the lib directory from it
-r_windows_library_filepath()
+platform::searchpath::r_windows_library_filepath()
 {
    local directory
    local arch
@@ -93,12 +93,14 @@ r_windows_library_filepath()
    RVAL=
    return 1
 }
+
+
 #
 # somewhat dependent on linux to have gcc/clang installed
 #
-r_platform_searchpath()
+platform::search::r_platform_searchpath()
 {
-   log_entry "r_platform_searchpath" "$@"
+   log_entry "platform::search::r_platform_searchpath" "$@"
 
    if [ -z "${MULLE_PLATFORM_SEARCHPATH}" ]
    then
@@ -140,16 +142,16 @@ r_platform_searchpath()
             # it's something like
             #  /mnt/c/Program\ Files\ \(x86\)/Windows\ Kits/10/Lib/10.0.18362.0/um/x64            
             # how do we get this ? well...
-            r_windows_library_filepath 
+            platform::searchpath::r_windows_library_filepath
             filepath="${RVAL}"
          ;;
 
          *)
             filepath="`rexekutor "${cc:-cc}" -Xlinker --verbose  2>/dev/null \
-                  | sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp'  \
-                  | egrep -v '^$' \
-                  | sed 's/[ \t]*$//' \
-                  | tr '\012' ':' `"
+                       | sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp'  \
+                       | egrep -v '^$' \
+                       | sed 's/[ \t]*$//' \
+                       | tr '\012' ':' `"
          ;;
       esac
 
@@ -172,9 +174,9 @@ r_platform_searchpath()
 
 
 
-platform_searchpath_main()
+platform::searchpath::main()
 {
-   log_entry "platform_searchpath_main" "$@"
+   log_entry "platform::searchpath::main" "$@"
 
    [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
 
@@ -182,11 +184,11 @@ platform_searchpath_main()
    do
       case "$1" in
          -h*|--help|help)
-            platform_searchpath_usage
+            platform::searchpath::usage
          ;;
 
          -*)
-            platform_searchpath_usage "Unknown option \"$1\""
+            platform::searchpath::usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -196,11 +198,8 @@ platform_searchpath_main()
       shift
    done
 
-   local name
-   local directory
+   [ $# -eq 0 ] || platform::searchpath::usage "Superflous parameters \"$*\""
 
-   [ $# -eq 0 ] || platform_searchpath_usage "Superflous parameters \"$*\""
-
-   r_platform_searchpath
-   echo "${RVAL}"
+   platform::search::r_platform_searchpath
+   [ ! -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
 }

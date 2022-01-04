@@ -33,7 +33,7 @@
 MULLE_PLATFORM_SDKPATH_SH="included"
 
 
-platform_sdkpath_usage()
+platform::sdkpath::usage()
 {
    [ $# -ne 0 ] && log_error "$1"
 
@@ -51,9 +51,9 @@ EOF
 }
 
 
-r_platform_darwin_sdkpath()
+platform::sdkpath::r_darwin_sdkpath()
 {
-   log_entry "r_platform_darwin_sdkpath" "$@"
+   log_entry "platform::sdkpath::r_darwin_sdkpath" "$@"
 
    # on 10.6 this will fail as --show-sdk-path ain't there
    RVAL="`xcrun --show-sdk-path 2> /dev/null`"
@@ -69,9 +69,9 @@ ${C_RESET_BOLD}xcrun${C_WARNING} and ${C_RESET_BOLD}xcode-select${C_WARNING} are
 }
 
 
-platform_sdkpath_main()
+platform::sdkpath::main()
 {
-   log_entry "platform_sdkpath_main" "$@"
+   log_entry "platform::sdkpath::main" "$@"
 
    [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
 
@@ -79,11 +79,11 @@ platform_sdkpath_main()
    do
       case "$1" in
          -h*|--help|help)
-            platform_sdkpath_usage
+            platform::sdkpath::usage
          ;;
 
          -*)
-            platform_sdkpath_usage "Unknown option \"$1\""
+            platform::sdkpath::usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -93,11 +93,11 @@ platform_sdkpath_main()
       shift
    done
 
-   [ $# -eq 0 ] || platform_sdkpath_usage "Superflous parameters \"$*\""
+   [ $# -eq 0 ] || platform::sdkpath::usage "Superflous parameters \"$*\""
 
    local functionname
 
-   functionname="r_platform_${MULLE_UNAME}_sdkpath"
+   functionname="platform::sdkpath::r_${MULLE_UNAME}_sdkpath"
 
    if ! shell_is_function "${functionname}"
    then
@@ -109,6 +109,6 @@ platform_sdkpath_main()
       return 1
    fi
 
-   echo "${RVAL}"
+   printf "%s\n" "${RVAL}"
 }
 

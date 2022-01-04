@@ -32,16 +32,16 @@
 MULLE_PLATFORM_FLAGS_SH="included"
 
 
-r_cc_include_dir()
+platform::flags::r_cc_include_dir()
 {
    local dir="$1"
    local quote="$2"
 
    case "${MULLE_UNAME}" in
       windows)
-         include_mulle_tool_library "platform" "wsl"
+         include "platform::wsl"
 
-         r_mulle_wslpath "${dir}"
+         platform::wsl::r_wslpath "${dir}"
          RVAL="/I${quote}${RVAL}${quote}"
       ;;
 
@@ -52,16 +52,29 @@ r_cc_include_dir()
 }
 
 
-r_cc_output_object_filename()
+platform::flags::r_cc_framework_dir()
+{
+   local dir="$1"
+   local quote="$2"
+
+   case "${MULLE_UNAME}" in
+      *)
+         RVAL="-F${quote}${dir}${quote}"
+      ;;
+   esac
+}
+
+
+platform::flags::r_cc_output_object_filename()
 {
    local filename="$1"
    local quote="$2"
 
    case "${MULLE_UNAME}" in
       windows)
-         include_mulle_tool_library "platform" "wsl"
+         include "platform::wsl"
 
-         r_mulle_wslpath "${filename}"
+         platform::wsl::r_wslpath "${filename}"
          RVAL="/Fo${quote}${RVAL}${quote}"
       ;;
 
@@ -76,21 +89,21 @@ r_cc_output_object_filename()
 }
 
 
-r_cc_output_exe_filename()
+platform::flags::r_cc_output_exe_filename()
 {
    local filename="$1"
    local quote="$2"
 
    case "${MULLE_UNAME}" in
       windows)
-         include_mulle_tool_library "platform" "wsl"
+         include "platform::wsl"
 
-         r_mulle_wslpath "${filename}"
+         platform::wsl::r_wslpath "${filename}"
          RVAL="/Fe${quote}${RVAL}${quote}"
       ;;
 
       mingw)
-         RVAL="-Fe${quote}`cygpath -w "${filename}"`${quote}"
+         RVAL="-Fe${quote}`"${CYGPATH:-cygpath}" -w "${filename}"`${quote}"
       ;;
 
       *)

@@ -35,12 +35,12 @@ MULLE_PLATFORM_WSL_SH="included"
 #
 # TODO: use mulle-platform for all this
 #
-r_mulle_wslpath()
+platform::wsl::r_wslpath()
 {
    if [ ! -e "$1" ]
    then
       r_dirname "$1"
-      r_mulle_wslpath "${RVAL}"
+      platform::wsl::r_wslpath "${RVAL}"
       tmp="${RVAL}"
 
       r_basename "$1"
@@ -53,9 +53,9 @@ r_mulle_wslpath()
 
 
 
-mulle_wslpath()
+platform::wsl::wslpath()
 {
    shift
-   r_mulle_wslpath "$1"
+   platform::wsl::r_wslpath "$1"
    printf "%s\n" "${RVAL}"
 }

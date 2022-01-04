@@ -33,7 +33,7 @@
 MULLE_PLATFORM_ENVIRONMENT_SH="included"
 
 
-r_mulle_nomangle()
+platform::environment::r_nomangle()
 {
    RVAL="$1"
 }
@@ -52,14 +52,14 @@ r_mulle_nomangle()
 # local _suffix_staticlib
 # local _r_path_mangler
 #
-__platform_get_fix_definitions()
+platform::environment::__get_fix_definitions()
 {
-   log_entry "__platform_get_fix_definitions" "$@"
+   log_entry "platform::environment::__get_fix_definitions" "$@"
 
    _option_frameworkpath=""
    _option_libpath="-L"
    _option_linklib="-l"
-   _option_rpath="-Wl,-rpath=" # space keep
+   _option_rpath="-Wl,-rpath " # keep space
    _prefix_framework=""
    _prefix_lib="lib"
    _option_link_mode="basename,no-suffix"
@@ -72,6 +72,10 @@ __platform_get_fix_definitions()
          _option_frameworkpath="-F"
          _suffix_dynamiclib=".dylib"
          _suffix_framework=".framework"
+      ;;
+
+      linux)
+         _option_rpath="-Wl,-rpath="
       ;;
 
       mingw*|windows)
@@ -88,23 +92,23 @@ __platform_get_fix_definitions()
 
    case "${MULLE_UNAME}" in
       windows)
-         include_mulle_tool_library "platform" "wsl"
+         include "platform::wsl"
 
-         _r_path_mangler=r_mulle_wslpath
+         _r_path_mangler=platform::wsl::r_wslpath
       ;;
 
       *)
-         include_mulle_tool_library "platform" "mingw"
+         include "platform::mingw"
 
-         _r_path_mangler=r_mulle_nomangle
+         _r_path_mangler=platform::environment::r_nomangle
       ;;
    esac
 }
 
 
-r_platform_default_whole_archive_format()
+platform::environment::r_default_whole_archive_format()
 {
-   log_entry "r_platform_default_whole_archive_format" "$@"
+   log_entry "platform::environment::r_default_whole_archive_format" "$@"
 
    case "${MULLE_UNAME}" in
       mingw*|windows)

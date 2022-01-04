@@ -33,7 +33,7 @@
 MULLE_PLATFORM_TRANSLATE_SH="included"
 
 
-platform_translate_usage()
+platform::translate::usage()
 {
    [ $# -ne 0 ] && log_error "$1"
 
@@ -58,9 +58,9 @@ EOF
 }
 
 
-r_platform_simplify_wholearchive()
+platform::translate::r_simplify_wholearchive()
 {
-   log_entry "r_platform_simplify_wholearchive" "$@"
+   log_entry "platform::translate::r_simplify_wholearchive" "$@"
 
    local lines="$1"
    local wholearchiveformat="$2"
@@ -80,13 +80,14 @@ r_platform_simplify_wholearchive()
 }
 
 
-_r_platform_translate_file()
+platform::translate::_r_translate_file()
 {
-   log_entry "_r_platform_translate_file" "$@"
+   log_entry "platform::translate::_r_translate_file" "$@"
 
    local csv="$1"
+   local quote="$2"
 
-   RVAL="${csv%%;*}"
+   RVAL="${quote}${csv%%;*}${quote}"
 
    if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
    then
@@ -96,9 +97,9 @@ _r_platform_translate_file()
 }
 
 
-platform_is_dynamic_library()
+platform::translate::is_dynamic_library()
 {
-   log_entry "platform_is_dynamic_library" "$@"
+   log_entry "platform::translate::is_dynamic_library" "$@"
 
    local name="$1"
    local dynamiclibsuffix="$2"
@@ -160,15 +161,16 @@ platform_is_dynamic_library()
 
 
 
-_r_platform_translate_ld_static()
+platform::translate::_r_translate_ld_static()
 {
-   log_entry "_r_platform_translate_ld_static" "$@"
+   log_entry "platform::translate::_r_translate_ld_static" "$@"
 
    local option="$1" # _option_linklib (-l)
    local prefix="$2"             # _prefix_lib     (lib)
    local ldname="$3"   # _suffix_dynamiclib (.so)
    local name="$4"   # _suffix_dynamiclib (.so)
    local wholearchiveformat="$5"
+   local quote="$6"
 
    local result
 
@@ -210,7 +212,7 @@ _r_platform_translate_ld_static()
 
       *',force-load,'*)
          is_absolutepath "${name}" || fail "\"${name}\" must be absolute for -force_load"
-         result="-force_load ${name}" # clobber
+         result="-force_load ${quote}${name}${quote}" # clobber
       ;;
 
       *)
@@ -237,14 +239,15 @@ _r_platform_translate_ld_static()
 }
 
 
-_r_platform_translate_ld_dynamic()
+platform::translate::_r_translate_ld_dynamic()
 {
-   log_entry "_r_platform_translate_ld_dynamic" "$@"
+   log_entry "platform::translate::_r_translate_ld_dynamic" "$@"
 
    local option="$1"    # _option_linklib (-l)
    local prefix="$2"    # _prefix_lib     (lib)
    local ldname="$3"    # _suffix_dynamiclib (.so)
    local wholearchiveformat="$4"
+   local quote="$5"
 
    local result
 
@@ -278,9 +281,9 @@ _r_platform_translate_ld_dynamic()
 }
 
 
-_r_platform_translate_ld()
+platform::translate::_r_translate_ld()
 {
-   log_entry "_r_platform_translate_ld" "$@"
+   log_entry "platform::translate::_r_translate_ld" "$@"
 
    local csv="$1"
    local option="$2" # _option_linklib (-l)
@@ -290,6 +293,7 @@ _r_platform_translate_ld()
    local dynamiclibsuffix="$6"   # _suffix_dynamiclib (.so)
    local preferredlibformat="$7"
    local wholearchiveformat="$8"
+   local quote="$9"
 
    local name
    local marks
@@ -342,25 +346,28 @@ _r_platform_translate_ld()
 
    case ",${marks}," in
       *,only-framework,*)
-         RVAL="-framework ${ldname}"
+         RVAL="-framework ${quote}${ldname}${quote}"
       ;;
 
       *)
-         if platform_is_dynamic_library "${name}" \
-                                        "${dynamiclibsuffix}" \
-                                        "${marks}" \
-                                        "${preferredlibformat}"
+         if platform::translate::is_dynamic_library "${name}" \
+                                                    "${dynamiclibsuffix}" \
+                                                    "${marks}" \
+                                                    "${preferredlibformat}"
          then
-            _r_platform_translate_ld_dynamic "${option}" \
-                                             "${prefix}" \
-                                             "${ldname}" \
-                                             "${wholearchiveformat}"
+            platform::translate::_r_translate_ld_dynamic "${option}" \
+                                                        "${prefix}" \
+                                                        "${ldname}" \
+                                                        "${wholearchiveformat}" \
+                                                        "${quote}"
+
          else
-            _r_platform_translate_ld_static  "${option}" \
-                                             "${prefix}" \
-                                             "${ldname}" \
-                                             "${name}" \
-                                             "${wholearchiveformat}"
+            platform::translate::_r_translate_ld_static  "${option}" \
+                                                         "${prefix}" \
+                                                         "${ldname}" \
+                                                         "${name}" \
+                                                         "${wholearchiveformat}" \
+                                                         "${quote}"
          fi
       ;;
    esac
@@ -375,14 +382,15 @@ _r_platform_translate_ld()
 }
 
 
-_r_platform_translate_ldpath()
+platform::translate::_r_translate_ldpath()
 {
-   log_entry "_r_platform_translate_ldpath" "$@"
+   log_entry "platform::translate::_r_translate_ldpath" "$@"
 
    local csv="$1"
    local option_library="$2"      # _option_linklib (-l)
    local option_framework="$3"    # _suffix_staticlib (.a)
    local r_path_mangler="$4"
+   local quote="$5"
 
    local name
    local marks
@@ -416,7 +424,7 @@ _r_platform_translate_ldpath()
       /*)
          r_dirname "${name}"
          ${r_path_mangler} "${RVAL}"
-         RVAL="${option}${RVAL}"
+         RVAL="${option}${quote}${RVAL}${quote}"
       ;;
 
       *)
@@ -434,13 +442,14 @@ _r_platform_translate_ldpath()
 }
 
 
-_r_platform_translate_ld_library_path()
+platform::translate::_r_translate_ld_library_path()
 {
-   log_entry "_r_platform_translate_ld_library_path" "$@"
+   log_entry "platform::translate::_r_translate_ld_library_path" "$@"
 
    local csv="$1"
    local dynamiclibsuffix="$2"   # _suffix_dynamiclib (.so)
    local r_path_mangler="$3"
+   local quote="$4"
 
    local name
 
@@ -464,10 +473,12 @@ _r_platform_translate_ld_library_path()
             /*${dynamiclibsuffix})
                r_dirname "${name}"
                ${r_path_mangler} "${RVAL}"
+               RVAL="${quote}${RVAL}${quote}"
             ;;
 
             *)
-               log_fluff "\"${name}\" without \"${dynamiclibsuffix}\" suffix ignored for LD_LIBRARY_PATH"
+               log_fluff "\"${name}\" without \"${dynamiclibsuffix}\" suffix \
+ignored for LD_LIBRARY_PATH"
             ;;
          esac
       ;;
@@ -482,13 +493,14 @@ _r_platform_translate_ld_library_path()
 }
 
 
-_r_platform_translate_path()
+platform::translate::_r_translate_path()
 {
-   log_entry "_r_platform_translate_path" "$@"
+   log_entry "platform::translate::_r_translate_path" "$@"
 
    local csv="$1"
    local dynamiclibsuffix="$2"   # _suffix_dynamiclib (.so)
    local r_path_mangler="$3"
+   local quote="$4"
 
    local name
 
@@ -507,10 +519,12 @@ _r_platform_translate_path()
             /*${dynamiclibsuffix})
                r_dirname "${name}"
                ${r_path_mangler} "${RVAL}"
+               RVAL="${quote}${RVAL}${quote}"
             ;;
 
             *)
-               log_fluff "\"${name}\" without \"${dynamiclibsuffix}\" suffix ignored for PATH"
+               log_fluff "\"${name}\" without \"${dynamiclibsuffix}\" suffix \
+ignored for PATH"
             ;;
          esac
       ;;
@@ -530,14 +544,15 @@ _r_platform_translate_path()
 }
 
 
-_r_platform_translate_rpath()
+platform::translate::_r_translate_rpath()
 {
-   log_entry "_r_platform_translate_rpath" "$@"
+   log_entry "platform::translate::_r_translate_rpath" "$@"
 
    local csv="$1"
    local dynamiclibsuffix="$2"   # _suffix_dynamiclib (.so)
    local option_rpath="$3"
    local r_path_mangler="$4"
+   local quote="$5"
 
    local name
    local lines
@@ -558,7 +573,7 @@ _r_platform_translate_rpath()
             /*${dynamiclibsuffix})
                r_dirname "${name}"
                ${r_path_mangler} "${RVAL}"
-               RVAL="${option_rpath}${RVAL}"
+               RVAL="${option_rpath}${quote}${RVAL}${quote}"
             ;;
 
             *)
@@ -582,9 +597,9 @@ _r_platform_translate_rpath()
 }
 
 
-_r_platform_translate_lines()
+platform::translate::_r_translate_lines()
 {
-   log_entry "_r_platform_translate_lines" "$@"
+   log_entry "platform::translate::_r_translate_lines" "$@"
 
    local format="$1"
    local option="$2"
@@ -593,8 +608,9 @@ _r_platform_translate_lines()
    local preferredlibformat="$5"
    local wholearchiveformat="$6"
    local separator="$7"
+   local quote="$8"
 
-   shift 7
+   shift 8
 
    [ -z "${MULLE_PLATFORM_ENVIRONMENT_SH}" ] && \
       . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
@@ -611,7 +627,7 @@ _r_platform_translate_lines()
    local _option_link_mode
    local _r_path_mangler
 
-   __platform_get_fix_definitions
+   platform::environment::__get_fix_definitions
 
    local name
    local lines
@@ -623,7 +639,7 @@ _r_platform_translate_lines()
 
    if [ "${wholearchiveformat}" = "DEFAULT" ]
    then
-      r_platform_default_whole_archive_format
+      platform::environment::r_default_whole_archive_format
       wholearchiveformat="${RVAL}"
    fi
 
@@ -634,11 +650,13 @@ _r_platform_translate_lines()
    do
       case "${format}" in 
          file)
-            _r_platform_translate_file \
-                                  "${csv}"
+            platform::translate::_r_translate_file \
+                                  "${csv}" \
+                                  "${quote}"
          ;;
+
          ld)
-            _r_platform_translate_ld \
+            platform::translate::_r_translate_ld \
                                   "${csv}" \
                                   "${option}" \
                                   "${prefix}" \
@@ -646,35 +664,40 @@ _r_platform_translate_lines()
                                   "${_suffix_staticlib}" \
                                   "${_suffix_dynamiclib}" \
                                   "${preferredlibformat}" \
-                                  "${wholearchiveformat}"
+                                  "${wholearchiveformat}" \
+                                  "${quote}"
          ;;
 
          ldpath)
-            _r_platform_translate_ldpath  \
+            platform::translate::_r_translate_ldpath  \
                                   "${csv}" \
                                   "${_option_libpath}" \
                                   "${_option_frameworkpath}" \
-                                  "${_r_path_mangler}"
+                                  "${_r_path_mangler}" \
+                                  "${quote}"
          ;;
 
          ld_library_path)
-            _r_platform_translate_ld_library_path \
+            platform::translate::_r_translate_ld_library_path \
                                   "${csv}" \
                                   "${_suffix_dynamiclib}" \
-                                  "${_r_path_mangler}"
+                                  "${_r_path_mangler}" \
+                                  "${quote}"
          ;;
          path)
-            _r_platform_translate_path  \
+            platform::translate::_r_translate_path  \
                                   "${csv}" \
                                   "${_suffix_dynamiclib}" \
-                                  "${_r_path_mangler}"
+                                  "${_r_path_mangler}" \
+                                  "${quote}"
          ;;
          rpath)
-            _r_platform_translate_rpath \
+            platform::translate::_r_translate_rpath \
                                   "${csv}" \
                                   "${_suffix_dynamiclib}" \
                                   "${_option_rpath}" \
-                                  "${_r_path_mangler}"
+                                  "${_r_path_mangler}" \
+                                  "${quote}"
          ;;
 
          *)
@@ -684,22 +707,29 @@ _r_platform_translate_lines()
       line="${RVAL}"
 
       log_debug "add: $format :: $csv -> $line"
-      r_add_unique_line "${lines}" "${line}"
-      lines="${RVAL}"
+      if [ ! -z "${line}" ]
+      then
+         r_add_unique_line "${lines}" "${line}"
+         lines="${RVAL}"
+      fi
    done
 
+   if [ "${separator}" = $'\n' ]
+   then
+      RVAL="${lines}"
+      return 0
+   fi
+
    RVAL=""
-   shell_disable_glob; IFS=$'\n'
-   for line in ${lines}
-   do
-      shell_enable_glob; IFS="${DEFAULT_IFS}"
+
+   .foreachline line in ${lines}
+   .do
       r_concat "${RVAL}" "${line}" "${separator}"
-   done
-   shell_enable_glob; IFS="${DEFAULT_IFS}"
+   .done
 }
 
 
-r_platform_translate_lines()
+platform::translate::r_translate_lines()
 {
    local format="$1" 
    local preferredlibformat="$2"
@@ -707,7 +737,7 @@ r_platform_translate_lines()
 
    shift 3
 
-   _r_platform_translate_lines "${format}" \
+   platform::translate::_r_translate_lines "${format}" \
                                "DEFAULT" \
                                "DEFAULT" \
                                "DEFAULT" \
@@ -717,16 +747,16 @@ r_platform_translate_lines()
 }
 
 
-platform_default_wholearchive_format()
+platform::translate::default_wholearchive_format()
 {
-   r_platform_default_whole_archive_format
+   platform::environment::r_default_whole_archive_format
    [ ! -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
 }
 
 
-platform_translate_main()
+platform::translate::main()
 {
-   log_entry "platform_translate_main" "$@"
+   log_entry "platform::translate::main" "$@"
 
    [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
 
@@ -738,37 +768,13 @@ platform_translate_main()
    local OPTION_WHOLE_ARCHIVE_FORMAT="DEFAULT"
    local OPTION_PREFERRED_LIBRARY_STYLE='static'
    local OPTION_SEPARATOR=$'\n'
+   local OPTION_QUOTE
 
    while [ $# -ne 0 ]
    do
       case "$1" in
          -h*|--help|help)
-            platform_translate_usage
-         ;;
-
-         --option)
-            [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
-            shift
-            OPTION_OPTION="$1"
-         ;;
-
-         --marks)
-            [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
-            shift
-            OPTION_MARKS="$1"
-         ;;
-
-         --prefix)
-            [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
-            shift
-            OPTION_PREFIX="$1"
-         ;;
-
-         --preferred-library-style)
-           [ $# -eq 1 ] && sde_linkorder_usage "Missing argument to \"$1\""
-            shift
-
-            OPTION_PREFERRED_LIBRARY_STYLE="$1"
+            platform::translate::usage
          ;;
 
          --dynamic)
@@ -783,20 +789,73 @@ platform_translate_main()
             OPTION_PREFERRED_LIBRARY_STYLE='standalone'
          ;;
 
+
+         --fake-uname)
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
+            shift
+
+            MULLE_UNAME="$1"
+         ;;
+
+         --marks)
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
+            shift
+            OPTION_MARKS="$1"
+         ;;
+
          --mode)
-            [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
             shift
             OPTION_MODE="$1"
          ;;
 
+         --option)
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
+            shift
+            OPTION_OPTION="$1"
+         ;;
+
+         --prefix)
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
+            shift
+            OPTION_PREFIX="$1"
+         ;;
+
+         --preferred-library-style)
+           [ $# -eq 1 ] && sde_linkorder_usage "Missing argument to \"$1\""
+            shift
+
+            OPTION_PREFERRED_LIBRARY_STYLE="$1"
+         ;;
+
+         --quote)
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
+            shift
+            OPTION_QUOTE="$1"
+         ;;
+
          --separator|--separator)
-            [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
             shift
             OPTION_SEPARATOR="$1"
          ;;
 
+         --output-format)
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
+            shift
+            OPTION_OUTPUT_FORMAT="$1"
+            case "${OPTION_OUTPUT_FORMAT}" in
+               ld|file|ldpath|ld_library_path|path|rpath)
+               ;;
+
+               *)
+                  platform::translate::usage "Unknown output format value \"${OPTION_OUTPUT_FORMAT}\""
+               ;;
+            esac
+         ;;
+
          --whole-archive-format)
-            [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
             shift
 
             OPTION_WHOLE_ARCHIVE_FORMAT="$1"
@@ -805,34 +864,13 @@ platform_translate_main()
                ;;
 
                *)
-                  platform_translate_usage "Unknown whole-archive format value \"${OPTION_WHOLE_ARCHIVE_FORMAT}\""
+                  platform::translate::usage "Unknown whole-archive format value \"${OPTION_WHOLE_ARCHIVE_FORMAT}\""
                ;;
             esac
-         ;;
-
-         --output-format)
-            [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
-            shift
-            OPTION_OUTPUT_FORMAT="$1"
-            case "${OPTION_OUTPUT_FORMAT}" in
-               ld|file|ldpath|ld_library_path|path|rpath)
-               ;;
-
-               *)
-                  platform_translate_usage "Unknown output format value \"${OPTION_OUTPUT_FORMAT}\""
-               ;;
-            esac
-         ;;
-
-         --fake-uname)
-            [ $# -eq 1 ] && platform_translate_usage "Missing argument to \"$1\""
-            shift
-
-            MULLE_UNAME="$1"
          ;;
 
          -*)
-            platform_translate_usage "Unknown option \"$1\""
+            platform::translate::usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -845,7 +883,7 @@ platform_translate_main()
 
    local name
 
-   [ $# -ne 0 ] || platform_translate_usage "Missing name"
+   [ $# -ne 0 ] || platform::translate::usage "Missing name"
 
    if [ ! -z "${OPTION_MARKS}" ]
    then
@@ -856,15 +894,16 @@ platform_translate_main()
 
    firstline="$1"; shift
 
-   _r_platform_translate_lines "${OPTION_OUTPUT_FORMAT}" \
-                               "${OPTION_OPTION}" \
-                               "${OPTION_PREFIX}" \
-                               "${OPTION_MODE}" \
-                               "${OPTION_PREFERRED_LIBRARY_STYLE}" \
-                               "${OPTION_WHOLE_ARCHIVE_FORMAT}" \
-                               "${OPTION_SEPARATOR}" \
-                               "${firstline}${OPTION_MARKS}" \
-                               "$@"
+   platform::translate::_r_translate_lines "${OPTION_OUTPUT_FORMAT}" \
+                                           "${OPTION_OPTION}" \
+                                           "${OPTION_PREFIX}" \
+                                           "${OPTION_MODE}" \
+                                           "${OPTION_PREFERRED_LIBRARY_STYLE}" \
+                                           "${OPTION_WHOLE_ARCHIVE_FORMAT}" \
+                                           "${OPTION_SEPARATOR}" \
+                                           "${OPTION_QUOTE}" \
+                                           "${firstline}${OPTION_MARKS}" \
+                                           "$@"
 
    [ ! -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
 }

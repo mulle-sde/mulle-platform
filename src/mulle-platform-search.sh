@@ -33,7 +33,7 @@
 MULLE_PLATFORM_SEARCH_SH="included"
 
 
-platform_search_usage()
+platform::search::usage()
 {
    [ $# -ne 0 ] && log_error "$1"
 
@@ -59,9 +59,9 @@ EOF
 
 
 # some values are passed in via global vars!
-_r_platform_search_static_library()
+platform::search::r_search_static_library()
 {
-   log_entry "_r_platform_search_static_library" "$@"
+   log_entry "platform::search::r_search_static_library" "$@"
 
    local directory="$1"
    local name="$2"
@@ -75,9 +75,9 @@ _r_platform_search_static_library()
 
 
 # some values are passed in via global vars!
-_r_platform_search_dynamic_library()
+platform::search::r_search_dynamic_library()
 {
-   log_entry "_r_platform_search_dynamic_library" "$@"
+   log_entry "platform::search::r_search_dynamic_library" "$@"
 
    local directory="$1"
    local name="$2"
@@ -91,9 +91,9 @@ _r_platform_search_dynamic_library()
 
 
 # some values are passed in via global vars!
-_r_platform_search_library_type()
+platform::search::r_search_library_type()
 {
-   log_entry "_r_platform_search_library_type" "$@"
+   log_entry "platform::search::r_search_library_type" "$@"
 
    local type="$1"
    local directory="$2"
@@ -101,10 +101,10 @@ _r_platform_search_library_type()
    local prefix="$4"
    local suffix="$5"
 
-   if "_r_platform_search_${type}_library" "${directory}" \
-                                           "${name}" \
-                                           "${prefix}" \
-                                           "${suffix}"
+   if "platform::search::r_search_${type}_library" "${directory}" \
+                                                   "${name}" \
+                                                   "${prefix}" \
+                                                   "${suffix}"
    then
       log_fluff "Found"
       return 0
@@ -114,9 +114,9 @@ _r_platform_search_library_type()
 
 
 # some values are passed in via global vars!
-_r_platform_search_library()
+platform::search::r_search_library()
 {
-   log_entry "_r_platform_search_library" "$@"
+   log_entry "platform::search::r_search_library" "$@"
 
    [ $# -gt 4 ] || internal_fail "API mismatch"
 
@@ -136,8 +136,9 @@ _r_platform_search_library()
 
       if [  "${type}" = 'standalone' ]
       then
-         if _r_platform_search_library_type "dynamic" "${directory}" \
-                                                      "${name}-standalone"
+         if platform::search::r_search_library_type "dynamic" \
+                                                     "${directory}" \
+                                                     "${name}-standalone"
          then
             return 0
          fi
@@ -146,8 +147,9 @@ _r_platform_search_library()
          # if we build everything as shared libraries then we don't
          # need a -standalone library
          #
-         if _r_platform_search_library_type "dynamic" "${directory}" \
-                                                      "${name}"
+         if platform::search::r_search_library_type "dynamic" \
+                                                     "${directory}" \
+                                                     "${name}"
          then
             return 0
          fi
@@ -158,8 +160,9 @@ _r_platform_search_library()
 
       if [ ! -z "${require}" ]
       then
-         if _r_platform_search_library_type "${require}" "${directory}" \
-                                                         "${name}"
+         if platform::search::r_search_library_type "${require}" \
+                                                     "${directory}" \
+                                                     "${name}"
          then
             return 0
          fi
@@ -181,14 +184,16 @@ _r_platform_search_library()
          ;;
       esac
 
-      if _r_platform_search_library_type "${first_type}" "${directory}" \
-                                                         "${name}"
+      if platform::search::r_search_library_type "${first_type}" \
+                                                  "${directory}" \
+                                                  "${name}"
       then
          return 0
       fi
 
-      if _r_platform_search_library_type "${second_type}" "${directory}" \
-                                                          "${name}"
+      if platform::search::r_search_library_type "${second_type}" \
+                                                  "${directory}" \
+                                                  "${name}"
       then
          return 0
       fi
@@ -202,9 +207,9 @@ _r_platform_search_library()
 
 # some values are passed in via global vars!
 #
-_r_platform_search_framework()
+platform::search::_r_search_framework()
 {
-   log_entry "r_platform_search_framework" "$@"
+   log_entry "platform::search::_r_search_framework" "$@"
 
    [ $# -gt 1 ] || internal_fail "API mismatch"
 
@@ -223,7 +228,7 @@ _r_platform_search_framework()
       log_fluff "Looking for framework \"${RVAL}\""
       if [ -d "${RVAL}" ]
       then
-         log_fluff "Found"
+         # log_fluff "Found" # someone else will print this soon
          return 0
       fi
       shift
@@ -233,9 +238,9 @@ _r_platform_search_framework()
 }
 
 
-r_platform_search()
+platform::search::r_platform_search()
 {
-   log_entry "r_platform_search" "$@"
+   log_entry "platform::search::r_platform_search" "$@"
 
    local searchpath="$1"
    local type="$2"
@@ -243,13 +248,13 @@ r_platform_search()
    local require="$4"
    shift 4
 
-   include_mulle_tool_library "platform" "environment"
+   include "platform::environment"
 
    if [ -z "${searchpath}" ]
    then
-      include_mulle_tool_library "platform" "searchpath"
+      include "platform::searchpath"
 
-      r_platform_searchpath
+      platform::search::r_platform_searchpath
       searchpath="${RVAL}"
    fi
 
@@ -265,7 +270,7 @@ r_platform_search()
    local _suffix_staticlib
    local _r_path_mangler
 
-   __platform_get_fix_definitions
+   platform::environment::__get_fix_definitions
 
    local directory
 
@@ -281,17 +286,17 @@ r_platform_search()
 
       if [ "${type}" = "framework" ]
       then
-         if _r_platform_search_framework "${directory}" \
-                                         "$@"
+         if platform::search::_r_search_framework "${directory}" \
+                                                  "$@"
          then
             return 0
          fi
       else
-         if _r_platform_search_library "${directory}" \
-                                       "${type}" \
-                                       "${prefer}" \
-                                       "${require}" \
-                                       "$@"
+         if platform::search::r_search_library "${directory}" \
+                                                "${type}" \
+                                                "${prefer}" \
+                                                "${require}" \
+                                                "$@"
          then
             return 0
          fi
@@ -304,9 +309,9 @@ r_platform_search()
 }
 
 
-platform_search_main()
+platform::search::main()
 {
-   log_entry "platform_search_main" "$@"
+   log_entry "platform::search::main" "$@"
 
    [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
 
@@ -319,11 +324,11 @@ platform_search_main()
    do
       case "$1" in
          -h*|--help|help)
-            platform_search_usage
+            platform::search::usage
          ;;
 
          --prefer)
-            [ $# -eq 1 ] && platform_search_usage "mMssing argument to \"$1\""
+            [ $# -eq 1 ] && platform::search::usage "mMssing argument to \"$1\""
             shift
             OPTION_PREFER="$1"
 
@@ -332,13 +337,13 @@ platform_search_main()
                ;;
 
                *)
-                  platform_search_usage "Unknown prefer value \"${OPTION_PREFER}\""
+                  platform::search::usage "Unknown prefer value \"${OPTION_PREFER}\""
                ;;
             esac
          ;;
 
          --require)
-            [ $# -eq 1 ] && platform_search_usage "mMssing argument to \"$1\""
+            [ $# -eq 1 ] && platform::search::usage "mMssing argument to \"$1\""
             shift
             OPTION_REQUIRE="$1"
 
@@ -347,19 +352,19 @@ platform_search_main()
                ;;
 
                *)
-                  platform_search_usage "Unknown require value \"${OPTION_REQUIRE}\""
+                  platform::search::usage "Unknown require value \"${OPTION_REQUIRE}\""
                ;;
             esac
          ;;
 
          --search-path)
-            [ $# -eq 1 ] && platform_search_usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::search::usage "Missing argument to \"$1\""
             shift
             OPTION_SEARCH_PATH="$1"
          ;;
 
          --type)
-            [ $# -eq 1 ] && platform_search_usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::search::usage "Missing argument to \"$1\""
             shift
 
             OPTION_TYPE="$1"
@@ -368,13 +373,13 @@ platform_search_main()
                ;;
 
                *)
-                  platform_search_usage "Unknown type value \"${OPTION_TYPE}\""
+                  platform::search::usage "Unknown type value \"${OPTION_TYPE}\""
                ;;
             esac
          ;;
 
          -*)
-            platform_search_usage "Unknown option \"$1\""
+            platform::search::usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -387,13 +392,13 @@ platform_search_main()
    local name
    local directory
 
-   [ $# -ne 0 ] || platform_search_usage "Missing name"
+   [ $# -ne 0 ] || platform::search::usage "Missing name"
 
-   if r_platform_search "${OPTION_SEARCH_PATH}" \
-                        "${OPTION_TYPE}" \
-                        "${OPTION_PREFER}" \
-                        "${OPTION_REQUIRE}" \
-                        "$@"
+   if platform::search::r_platform_search "${OPTION_SEARCH_PATH}" \
+                                          "${OPTION_TYPE}" \
+                                          "${OPTION_PREFER}" \
+                                          "${OPTION_REQUIRE}" \
+                                          "$@"
    then
       rexekutor printf "%s\n" "${RVAL}"
       return 0

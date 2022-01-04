@@ -33,7 +33,7 @@
 MULLE_PLATFORM_INCLUDEPATH_SH="included"
 
 
-platform_includepath_usage()
+platform::includepath::usage()
 {
    [ $# -ne 0 ] && log_error "$1"
 
@@ -51,9 +51,9 @@ EOF
 #
 # somewhat dependent on linux to have gcc/clang installed
 #
-r_platform_includepath()
+platform::includepath::r_platform_includepath()
 {
-   log_entry "r_platform_includepath" "$@"
+   log_entry "platform::includepath::r_platform_includepath" "$@"
 
    local separator="${1:-:}"
 
@@ -103,9 +103,9 @@ r_platform_includepath()
 }
 
 
-platform_includepath_main()
+platform::includepath::main()
 {
-   log_entry "platform_includepath_main" "$@"
+   log_entry "platform::includepath::main" "$@"
 
    local OPTION_SEPARATOR
 
@@ -115,7 +115,7 @@ platform_includepath_main()
    do
       case "$1" in
          -h*|--help|help)
-            platform_includepath_usage
+            platform::includepath::usage
          ;;
 
          --cmake)
@@ -123,7 +123,7 @@ platform_includepath_main()
          ;;
 
          -*)
-            platform_includepath_usage "Unknown option \"$1\""
+            platform::includepath::usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -133,11 +133,8 @@ platform_includepath_main()
       shift
    done
 
-   local name
-   local directory
+   [ $# -eq 0 ] || platform::includepath::usage "Superflous parameters \"$*\""
 
-   [ $# -eq 0 ] || platform_includepath_usage "Superflous parameters \"$*\""
-
-   r_platform_includepath "${OPTION_SEPARATOR}"
-   echo "${RVAL}"
+   platform::includepath::r_platform_includepath "${OPTION_SEPARATOR}"
+   [ ! -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
 }

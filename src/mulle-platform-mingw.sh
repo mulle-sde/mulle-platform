@@ -41,14 +41,14 @@ MULLE_PLATFORM_MINGW_SH="included"
 # (still called mingw32-make on 64 bit)
 # The cmake plugin will use nmake though
 #
-mingw_bitness()
+platform::mingw::bitness()
 {
    uname | sed -e 's/MINGW\([0-9]*\)_.*/\1/'
 }
 
 
 
-find_msvc_executable()
+platform::mingw::find_msvc_executable()
 {
    local exe="${1:-cl.exe}"
    local name="${2:-compiler}"
@@ -87,13 +87,13 @@ find_msvc_executable()
 
 
 # used by tests
-mingw_demangle_path()
+platform::mingw::demangle_path()
 {
    printf "%s\n" "$1" | sed 's|^/\(.\)|\1:|' | sed s'|/|\\|g'
 }
 
 
-mingw_eval_demangle_path()
+platform::mingw::eval_demangle_path()
 {
    printf "%s\n" "$1" | sed 's|^/\(.\)|\1:|' | sed s'|/|\\\\|g'
 }
@@ -104,7 +104,7 @@ mingw_eval_demangle_path()
 # but when one -I looks demangled, it doesn't demangle the first
 # one. It's so complicated
 #
-mingw_eval_demangle_paths()
+platform::mingw::eval_demangle_paths()
 {
 #   if [ $# -eq 0 ]
 #   then
@@ -116,14 +116,14 @@ mingw_eval_demangle_paths()
 
    while [ $# -ne 0 ]
    do
-      mingw_eval_demangle_path "$1"
+      platform::mingw::eval_demangle_path "$1"
       shift
    done
 }
 
 
 # used by anyone ?
-mingw_mangle_compiler()
+platform::mingw::mangle_compiler()
 {
    local compiler
 
@@ -145,9 +145,9 @@ mingw_mangle_compiler()
 #
 # just use regular clang on commandline tests
 #
-mingw_mangle_compiler_exe()
+platform::mingw::mangle_compiler_exe()
 {
-   log_entry "mingw_mangle_compiler_exe" "$@"
+   log_entry "platform::mingw::mangle_compiler_exe" "$@"
 
    local compiler="$1"
 
@@ -167,18 +167,19 @@ mingw_mangle_compiler_exe()
 #
 # fix path fckup
 #
-setup_mingw_buildenvironment()
+platform::mingw::setup_buildenvironment()
 {
-   log_debug "setup_mingw_buildenvironment"
+   log_debug "platform::mingw::setup_buildenvironment"
 
    local linker
 
    if [ -z "${LIBPATH}" -o  -z "${INCLUDE}" ] && [ -z "${DONT_USE_VS}" ]
    then
-      fail "environment variables INCLUDE and LIBPATH not set, start MINGW inside IDE environment"
+      fail "environment variables INCLUDE and LIBPATH not set, start MINGW \
+inside IDE environment"
    fi
 
-   linker="`find_msvc_executable "link.exe" "linker"`"
+   linker="`platform::mingw::find_msvc_executable "link.exe" "linker"`"
    if [ ! -z "${linker}" ]
    then
       LD="${linker}"
@@ -203,24 +204,26 @@ setup_mingw_buildenvironment()
    esac
 
    searchpath="${directory}:$PATH"
-   preprocessor="`find_msvc_executable "mulle-mingw-cpp" "preprocessor" "${searchpath}"`"
+   preprocessor="`platform::mingw::find_msvc_executable "mulle-mingw-cpp" \
+                                                        "preprocessor" \
+                                                        "${searchpath}"`"
    if [ ! -z "${preprocessor}" ]
    then
       CPP="${preprocessor}"
       export CPP
-      log_verbose "Environment variable ${C_INFO}CPP${C_VERBOSE} set to ${C_RESET}\"${CPP}\""
+      log_verbose "Environment variable ${C_INFO}CPP${C_VERBOSE} set to \
+${C_RESET}\"${CPP}\""
    else
       log_warning "mulle-mingw-cpp not found"
    fi
 }
 
 
-
 #
 # mingw32-make can't have sh.exe or in its path, so remove it
 # do not use mulle-bashfunctions here
 #
-mingw_buildpath()
+platform::mingw::buildpath()
 {
    local i
    local buildpath
@@ -260,7 +263,7 @@ mingw_buildpath()
 # mingw likes to put it's stuff in front, obscuring Visual Studio
 # executables this function resorts this (used in mulle-tests)
 #
-mingw_visualstudio_buildpath()
+platform::mingw::visualstudio_buildpath()
 {
    local i
    local buildpath
@@ -307,9 +310,9 @@ mingw_visualstudio_buildpath()
 }
 
 
-mingw32_make_buildpath()
+platform::mingw32::buildpath()
 {
-   mingw_buildpath
+   platform::mingw::buildpath
 }
 
 :
