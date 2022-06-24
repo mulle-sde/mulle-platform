@@ -73,7 +73,7 @@ platform::sdkpath::main()
 {
    log_entry "platform::sdkpath::main" "$@"
 
-   [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
+   [ -z "${DEFAULT_IFS}" ] && _internal_fail "IFS fail"
 
    while [ $# -ne 0 ]
    do

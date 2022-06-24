@@ -89,11 +89,8 @@ platform::translate::_r_translate_file()
 
    RVAL="${quote}${csv%%;*}${quote}"
 
-   if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
-   then
-      log_trace2 "csv   : ${csv}"
-      log_trace2 "RVAL  : ${RVAL}"
-   fi
+   log_setting "csv   : ${csv}"
+   log_setting "RVAL  : ${RVAL}"
 }
 
 
@@ -175,7 +172,8 @@ platform::translate::_r_translate_ld_static()
    local result
 
    # this can be useful if the resultant product is a shared library
-   # for example. Needed to get dlsym working
+   # for example. Needed to get dlsym working. Also needed for
+   # executables (but currently we don't use it for them)
    case ",${wholearchiveformat}," in
      *',export-dynamic,'*)
         r_concat "${result}" "-Wl,--export-dynamic"
@@ -372,13 +370,10 @@ platform::translate::_r_translate_ld()
       ;;
    esac
 
-   if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
-   then
-      log_trace2 "csv   : ${csv}"
-      log_trace2 "name  : ${name}"
-      log_trace2 "marks : ${marks}"
-      log_trace2 "RVAL  : ${RVAL}"
-   fi
+   log_setting "csv   : ${csv}"
+   log_setting "name  : ${name}"
+   log_setting "marks : ${marks}"
+   log_setting "RVAL  : ${RVAL}"
 }
 
 
@@ -432,13 +427,10 @@ platform::translate::_r_translate_ldpath()
       ;;
    esac
 
-   if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
-   then
-      log_trace2 "csv   : ${csv}"
-      log_trace2 "name  : ${name}"
-      log_trace2 "marks : ${marks}"
-      log_trace2 "RVAL  : ${RVAL}"
-   fi
+   log_setting "csv   : ${csv}"
+   log_setting "name  : ${name}"
+   log_setting "marks : ${marks}"
+   log_setting "RVAL  : ${RVAL}"
 }
 
 
@@ -477,19 +469,16 @@ platform::translate::_r_translate_ld_library_path()
             ;;
 
             *)
-               log_fluff "\"${name}\" without \"${dynamiclibsuffix}\" suffix \
+               _log_fluff "\"${name}\" without \"${dynamiclibsuffix}\" suffix \
 ignored for LD_LIBRARY_PATH"
             ;;
          esac
       ;;
    esac
 
-   if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
-   then
-      log_trace2 "csv   : ${csv}"
-      log_trace2 "name  : ${name}"
-      log_trace2 "RVAL  : ${RVAL}"
-   fi
+   log_setting "csv   : ${csv}"
+   log_setting "name  : ${name}"
+   log_setting "RVAL  : ${RVAL}"
 }
 
 
@@ -523,7 +512,7 @@ platform::translate::_r_translate_path()
             ;;
 
             *)
-               log_fluff "\"${name}\" without \"${dynamiclibsuffix}\" suffix \
+               _log_fluff "\"${name}\" without \"${dynamiclibsuffix}\" suffix \
 ignored for PATH"
             ;;
          esac
@@ -534,13 +523,10 @@ ignored for PATH"
       ;;
    esac
 
-   if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
-   then
-      log_trace2 "csv   : ${csv}"
-      log_trace2 "name  : ${name}"
-      log_trace2 "marks : ${marks}"
-      log_trace2 "RVAL  : ${RVAL}"
-   fi
+   log_setting "csv   : ${csv}"
+   log_setting "name  : ${name}"
+   log_setting "marks : ${marks}"
+   log_setting "RVAL  : ${RVAL}"
 }
 
 
@@ -589,10 +575,10 @@ platform::translate::_r_translate_rpath()
 
    if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
    then
-      log_trace2 "csv   : ${csv}"
-      log_trace2 "name  : ${name}"
-      log_trace2 "marks : ${marks}"
-      log_trace2 "RVAL  : ${RVAL}"
+      log_setting "csv   : ${csv}"
+      log_setting "name  : ${name}"
+      log_setting "marks : ${marks}"
+      log_setting "RVAL  : ${RVAL}"
    fi
 }
 
@@ -701,7 +687,7 @@ platform::translate::_r_translate_lines()
          ;;
 
          *)
-            internal_fail "unknown format \"${format}\""
+            _internal_fail "unknown format \"${format}\""
          ;;
       esac
       line="${RVAL}"
@@ -758,7 +744,7 @@ platform::translate::main()
 {
    log_entry "platform::translate::main" "$@"
 
-   [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
+   [ -z "${DEFAULT_IFS}" ] && _internal_fail "IFS fail"
 
    local OPTION_OUTPUT_FORMAT="ld"
    local OPTION_PREFIX="DEFAULT"

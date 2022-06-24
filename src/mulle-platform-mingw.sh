@@ -211,8 +211,7 @@ inside IDE environment"
    then
       CPP="${preprocessor}"
       export CPP
-      log_verbose "Environment variable ${C_INFO}CPP${C_VERBOSE} set to \
-${C_RESET}\"${CPP}\""
+      log_verbose "Environment variable ${C_INFO}CPP${C_VERBOSE} set to ${C_RESET}\"${CPP}\""
    else
       log_warning "mulle-mingw-cpp not found"
    fi

@@ -109,7 +109,7 @@ platform::includepath::main()
 
    local OPTION_SEPARATOR
 
-   [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
+   [ -z "${DEFAULT_IFS}" ] && _internal_fail "IFS fail"
 
    while [ $# -ne 0 ]
    do

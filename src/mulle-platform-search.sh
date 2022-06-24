@@ -118,7 +118,7 @@ platform::search::r_search_library()
 {
    log_entry "platform::search::r_search_library" "$@"
 
-   [ $# -gt 4 ] || internal_fail "API mismatch"
+   [ $# -gt 4 ] || _internal_fail "API mismatch"
 
    local directory="$1"
    local require="$2"
@@ -132,7 +132,7 @@ platform::search::r_search_library()
    while [ $# -ne 0 ]
    do
       name="$1"
-      [ -z "${name}" ] && internal_fail "empty name is not allowed"
+      [ -z "${name}" ] && _internal_fail "empty name is not allowed"
 
       if [  "${type}" = 'standalone' ]
       then
@@ -211,7 +211,7 @@ platform::search::_r_search_framework()
 {
    log_entry "platform::search::_r_search_framework" "$@"
 
-   [ $# -gt 1 ] || internal_fail "API mismatch"
+   [ $# -gt 1 ] || _internal_fail "API mismatch"
 
    local directory="$1"
    shift 1
@@ -221,7 +221,7 @@ platform::search::_r_search_framework()
    while [ $# -ne 0 ]
    do
       name="$1"
-      [ -z "${name}" ] && internal_fail "empty name is not allowed"
+      [ -z "${name}" ] && _internal_fail "empty name is not allowed"
 
       r_filepath_concat "${directory}" "${_prefix_framework}${name}${_suffix_framework}"
 
@@ -313,7 +313,7 @@ platform::search::main()
 {
    log_entry "platform::search::main" "$@"
 
-   [ -z "${DEFAULT_IFS}" ] && internal_fail "IFS fail"
+   [ -z "${DEFAULT_IFS}" ] && _internal_fail "IFS fail"
 
    local OPTION_SEARCH_PATH
    local OPTION_PREFER="static"
