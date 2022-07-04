@@ -175,10 +175,14 @@ platform::translate::_r_translate_ld_static()
    # for example. Needed to get dlsym working. Also needed for
    # executables (but currently we don't use it for them)
    case ",${wholearchiveformat}," in
-     *',export-dynamic,'*)
-        r_concat "${result}" "-Wl,--export-dynamic"
-        result="${RVAL}"
-     ;;
+      *',export-dynamic,'*)
+         case "${MULLE_UNAME}" in
+            linux) # ELF linkers really
+               r_concat "${result}" "-Wl,--export-dynamic"
+               result="${RVAL}"
+            ;;
+         esac
+      ;;
    esac
 
    case ",${marks}," in
@@ -354,18 +358,18 @@ platform::translate::_r_translate_ld()
                                                     "${preferredlibformat}"
          then
             platform::translate::_r_translate_ld_dynamic "${option}" \
-                                                        "${prefix}" \
-                                                        "${ldname}" \
-                                                        "${wholearchiveformat}" \
-                                                        "${quote}"
-
-         else
-            platform::translate::_r_translate_ld_static  "${option}" \
                                                          "${prefix}" \
                                                          "${ldname}" \
-                                                         "${name}" \
                                                          "${wholearchiveformat}" \
                                                          "${quote}"
+
+         else
+            platform::translate::_r_translate_ld_static "${option}" \
+                                                        "${prefix}" \
+                                                        "${ldname}" \
+                                                        "${name}" \
+                                                        "${wholearchiveformat}" \
+                                                        "${quote}"
          fi
       ;;
    esac
