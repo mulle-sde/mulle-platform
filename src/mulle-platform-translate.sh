@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+# shellcheck shell=bash
 #
 #   Copyright (c) 2018 nat -
 #   All rights reserved.
@@ -627,11 +627,8 @@ platform::translate::_r_translate_lines()
    [ "${prefix}" = "DEFAULT" ] && prefix="${_prefix_lib}"
    [ "${mode}"   = "DEFAULT" ] && mode="${_option_link_mode}"
 
-   if [ "${wholearchiveformat}" = "DEFAULT" ]
-   then
-      platform::environment::r_default_whole_archive_format
-      wholearchiveformat="${RVAL}"
-   fi
+   platform::environment::r_whole_archive_format "${wholearchiveformat}"
+   wholearchiveformat="${RVAL}"
 
    local line
 
@@ -728,19 +725,12 @@ platform::translate::r_translate_lines()
    shift 3
 
    platform::translate::_r_translate_lines "${format}" \
-                               "DEFAULT" \
-                               "DEFAULT" \
-                               "DEFAULT" \
-                               "${preferredlibformat}" \
-                               "${wholearchiveformat}" \
-                               "$@"
-}
-
-
-platform::translate::default_wholearchive_format()
-{
-   platform::environment::r_default_whole_archive_format
-   [ ! -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
+                                           "DEFAULT" \
+                                           "DEFAULT" \
+                                           "DEFAULT" \
+                                           "${preferredlibformat}" \
+                                           "${wholearchiveformat}" \
+                                           "$@"
 }
 
 

@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+# shellcheck shell=bash
 #
 #   Copyright (c) 2018 nat -
 #   All rights reserved.
@@ -106,21 +106,48 @@ platform::environment::__get_fix_definitions()
 }
 
 
-platform::environment::r_default_whole_archive_format()
+platform::environment::r_whole_archive_format()
 {
-   log_entry "platform::environment::r_default_whole_archive_format" "$@"
+   log_entry "platform::environment::r_whole_archive_format" "$@"
 
-   case "${MULLE_UNAME}" in
-      mingw*|windows)
-         RVAL="whole-archive-win"
+   local wholearchiveformat="$1"
+
+   case "${wholearchiveformat}" in
+      DEFAULT)
+         case "${MULLE_UNAME}" in
+            mingw*|windows)
+               RVAL="whole-archive-win"
+            ;;
+
+            darwin)
+               RVAL="force-load"
+            ;;
+
+            *)
+               RVAL="whole-archive,no-as-needed,export-dynamic"
+            ;;
+         esac
       ;;
 
-      darwin)
-         RVAL="force-load"
+      STATIC)
+         case "${MULLE_UNAME}" in
+            mingw*|windows)
+               RVAL="whole-archive-win"
+            ;;
+
+            darwin)
+               RVAL="force-load"
+            ;;
+
+            *)
+               RVAL="whole-archive,no-as-needed"
+            ;;
+         esac
       ;;
 
       *)
-         RVAL="whole-archive,no-as-needed,export-dynamic"
+         # just pass thru
+         RVAL="${wholearchiveformat}"
       ;;
    esac
 }
