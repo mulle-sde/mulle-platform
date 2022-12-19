@@ -19,8 +19,9 @@ LANGUAGE="bash"             # c,cpp, objc, bash ...
 # libpng
 # '
 
-#
-# Build via mulle-build. If you don't like this
-# edit bin/release.sh. Need to specify mulle-build dependencies
-# so that brew picks up the internal path!
-#
+DEPENDENCIES='${MULLE_NAT_TAP}mulle-bashfunctions
+'
+
+DEBIAN_DEPENDENCIES="mulle-bashfunctions (>= 5.0.0)"
+
+
