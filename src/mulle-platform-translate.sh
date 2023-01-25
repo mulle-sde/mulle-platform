@@ -129,7 +129,7 @@ platform::translate::is_dynamic_library()
    esac
 
    case "${MULLE_UNAME}" in
-      windows|mingw)
+      'windows'|'mingw'|'msys')
       ;;
 
       *)
@@ -457,10 +457,9 @@ platform::translate::_r_translate_ld_library_path()
       return
    fi
 
-
    # systems that don't have rpath use LD_LIBRARY_PATH
    case "${MULLE_UNAME}" in
-      darwin|mingw)
+      'darwin'|'mingw'|'msys')
          log_fluff "\"${name}\" on \"${MULLE_UNAME}\" ignored"
       ;;
 
@@ -507,7 +506,7 @@ platform::translate::_r_translate_path()
 
    # PATH only set on mingw to find DLLs
    case "${MULLE_UNAME}" in
-      mingw*)
+      'mingw')
          case "${name}" in
             /*${dynamiclibsuffix})
                r_dirname "${name}"
@@ -573,7 +572,7 @@ platform::translate::_r_translate_rpath()
       ;;
 
       *)
-         log_fluff "\"${name}\" on \"${MULLE_UNAME}\" ignored"
+         log_fluff "\"${name}\" on \"${MULLE_UNAME}\" ignored for RPATH"
       ;;
    esac
 
@@ -602,8 +601,7 @@ platform::translate::_r_translate_lines()
 
    shift 8
 
-   [ -z "${MULLE_PLATFORM_ENVIRONMENT_SH}" ] && \
-      . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
+   include "platform::environment"
 
    local _suffix_dynamiclib
    local _prefix_framework

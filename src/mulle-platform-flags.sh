@@ -95,14 +95,14 @@ platform::flags::r_cc_output_exe_filename()
    local quote="$2"
 
    case "${MULLE_UNAME}" in
-      windows)
+      'windows')
          include "platform::wsl"
 
          platform::wsl::r_wslpath "${filename}"
          RVAL="/Fe${quote}${RVAL}${quote}"
       ;;
 
-      mingw)
+      'mingw')
          RVAL="-Fe${quote}`"${CYGPATH:-cygpath}" -w "${filename}"`${quote}"
       ;;
 

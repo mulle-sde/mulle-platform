@@ -31,59 +31,11 @@
 #
 MULLE_PLATFORM_MINGW_SH="included"
 
-
-# DO NOT USE MULLE_BASHFUNCTIONS HERE
-# (Not sure why really ???, i think these are partially old "rescued" functions
-# from other scripts)...
-
 #
 # The configure plugin can't use nmake on mingw it must use mingw32-make
 # (still called mingw32-make on 64 bit)
 # The cmake plugin will use nmake though
 #
-platform::mingw::bitness()
-{
-   uname | sed -e 's/MINGW\([0-9]*\)_.*/\1/'
-}
-
-
-
-platform::mingw::find_msvc_executable()
-{
-   local exe="${1:-cl.exe}"
-   local name="${2:-compiler}"
-   local searchpath="${3:-$PATH}"
-
-   local filepath
-   local compiler
-
-   IFS=':'
-   shell_disable_glob
-   for filepath in ${searchpath}
-   do
-      IFS="${DEFAULT_IFS}"
-      shell_enable_glob
-
-      case "${filepath}" in
-         /usr/*|/bin)
-            continue;
-         ;;
-
-         *)
-            executable="${filepath}/${exe}"
-            if [ -x "${executable}" ]
-            then
-               # echo "MSVC ${name} found as ${executable}" >&2
-               printf "%s\n" "${executable}"
-               break
-            fi
-         ;;
-      esac
-   done
-   shell_enable_glob
-
-   IFS="${DEFAULT_IFS}"
-}
 
 
 # used by tests
@@ -122,45 +74,45 @@ platform::mingw::eval_demangle_paths()
 }
 
 
-# used by anyone ?
-platform::mingw::mangle_compiler()
-{
-   local compiler
-
-   compiler="$1"
-   case "${compiler}" in
-      *clang) # mulle-clang|clang
-         compiler="${compiler}-cl"
-      ;;
-
-      *)
-         compiler="cl"
-         log_fluff "Using default compiler cl"
-      ;;
-   esac
-   printf "%s\n" "${compiler}"
-}
+# not used by anyone ?
+# platform::mingw::mangle_compiler()
+# {
+#    local compiler
+#
+#    compiler="$1"
+#    case "${compiler}" in
+#       *clang) # mulle-clang|clang
+#          compiler="${compiler}-cl"
+#       ;;
+#
+#       *)
+#          compiler="cl"
+#          log_fluff "Using default compiler cl"
+#       ;;
+#    esac
+#    printf "%s\n" "${compiler}"
+# }
 
 
 #
 # just use regular clang on commandline tests
 #
-platform::mingw::mangle_compiler_exe()
+platform::mingw::r_mangle_compiler_exe()
 {
-   log_entry "platform::mingw::mangle_compiler_exe" "$@"
+   log_entry "platform::mingw::r_mangle_compiler_exe" "$@"
 
    local compiler="$1"
 
    case "${compiler}" in
       mulle-clang*|clang*)
+         RVAL="${compiler}"
       ;;
 
       *)
-         compiler="cl.exe"
-         echo "Using default compiler cl for $2" >&2
+         RVAL="cl.exe"
+         log_verbose "Using default compiler cl for $2"
       ;;
    esac
-   printf "%s\n" "${compiler}"
 }
 
 
@@ -171,31 +123,27 @@ platform::mingw::setup_buildenvironment()
 {
    log_debug "platform::mingw::setup_buildenvironment"
 
-   local linker
+#   if [ -z "${LIBPATH}" -o -z "${INCLUDE}" ] && [ -z "${DONT_USE_VS}" ]
+#   then
+#      log_warning "Environment variables INCLUDE and LIBPATH not set, start MINGW \
+#inside IDE environment"
+#   fi
 
-   if [ -z "${LIBPATH}" -o  -z "${INCLUDE}" ] && [ -z "${DONT_USE_VS}" ]
+   if r_mingw_find_msvc_executable "link.exe" "linker"
    then
-      fail "environment variables INCLUDE and LIBPATH not set, start MINGW \
-inside IDE environment"
-   fi
-
-   linker="`platform::mingw::find_msvc_executable "link.exe" "linker"`"
-   if [ ! -z "${linker}" ]
-   then
-      LD="${linker}"
+      LD="${RVAL}"
       export LD
       log_verbose "Environment variable ${C_INFO}LD${C_VERBOSE} set to ${C_RESET}\"${LD}\""
    else
       log_warning "MSVC link.exe not found"
    fi
 
-   local preprocessor
-   local searchpath
    local directory
 
    case "${MULLE_EXECUTABLE_FILE}" in
       /*|~*)
-         directory="`dirname -- "${MULLE_EXECUTABLE_FILE}"`"
+         r_dirname "${MULLE_EXECUTABLE_FILE}"
+         directory="${RVAL}"
       ;;
 
       *)
@@ -203,13 +151,14 @@ inside IDE environment"
       ;;
    esac
 
+   local searchpath
+
    searchpath="${directory}:$PATH"
-   preprocessor="`platform::mingw::find_msvc_executable "mulle-mingw-cpp" \
-                                                        "preprocessor" \
-                                                        "${searchpath}"`"
-   if [ ! -z "${preprocessor}" ]
+   if r_mingw_find_msvc_executable "mulle-mingw-cpp" \
+                                   "preprocessor" \
+                                   "${searchpath}"
    then
-      CPP="${preprocessor}"
+      CPP="${RVAL}"
       export CPP
       log_verbose "Environment variable ${C_INFO}CPP${C_VERBOSE} set to ${C_RESET}\"${CPP}\""
    else
@@ -218,101 +167,60 @@ inside IDE environment"
 }
 
 
-#
-# mingw32-make can't have sh.exe or in its path, so remove it
-# do not use mulle-bashfunctions here
-#
-platform::mingw::buildpath()
-{
-   local i
-   local buildpath
-   local vspath
-
-   IFS=':'
-   shell_disable_glob
-   for i in $PATH
-   do
-      IFS="${DEFAULT_IFS}"
-      shell_enable_glob
-
-      if [ -x "${i}/sh.exe" ]
-      then
-         echo "Removed \"$i\" from build PATH because it contains sh" >&2
-         continue
-      fi
-
-      if [ -z "${buildpath}" ]
-      then
-         buildpath="${i}"
-      else
-         buildpath="${buildpath}:${i}"
-      fi
-   done
-
-   IFS="${DEFAULT_IFS}"
-   shell_enable_glob
-
-   echo "link.exe: `PATH="${buildpath}" /usr/bin/which link.exe`" >&2
-   echo "Modified PATH: ${buildpath}" >&2
-   printf "%s\n" "${buildpath}"
-}
-
 
 #
 # mingw likes to put it's stuff in front, obscuring Visual Studio
 # executables this function resorts this (used in mulle-tests)
 #
-platform::mingw::visualstudio_buildpath()
+# platform::mingw::visualstudio_buildpath()
+# {
+#    local i
+#    local buildpath
+#    local vspath
+#
+#    .foreachpath i in $PATH
+#    .do
+#       case "$i" in
+#          *"/Microsoft Visual Studio"*)
+#             if [ -z "${vspath}" ]
+#             then
+#                vspath="${i}"
+#             else
+#                vspath="${vspath}:${i}"
+#             fi
+#          ;;
+#
+#          *)
+#             if [ -z "${buildpath}" ]
+#             then
+#                buildpath="${i}"
+#             else
+#                buildpath="${buildpath}:${i}"
+#             fi
+#          ;;
+#       esac
+#    .done
+#
+#    if [ ! -z "${vspath}" ]
+#    then
+#       if [ -z "${buildpath}" ]
+#       then
+#          buildpath="${vspath}"
+#       else
+#          buildpath="${vspath}:${buildpath}"
+#       fi
+#    fi
+#
+#    printf "%s\n" "${buildpath}"
+# }
+
+
+mulle::platform::initialize()
 {
-   local i
-   local buildpath
-   local vspath
-
-   IFS=':'
-   for i in $PATH
-   do
-      IFS="${DEFAULT_IFS}"
-
-      case "$i" in
-         *"/Microsoft Visual Studio"*)
-            if [ -z "${vspath}" ]
-            then
-               vspath="${i}"
-            else
-               vspath="${vspath}:${i}"
-            fi
-         ;;
-
-         *)
-            if [ -z "${buildpath}" ]
-            then
-               buildpath="${i}"
-            else
-               buildpath="${buildpath}:${i}"
-            fi
-         ;;
-      esac
-   done
-   IFS="${DEFAULT_IFS}"
-
-   if [ ! -z "${vspath}" ]
-   then
-      if [ -z "${buildpath}" ]
-      then
-         buildpath="${vspath}"
-      else
-         buildpath="${vspath}:${buildpath}"
-      fi
-   fi
-
-   printf "%s\n" "${buildpath}"
+   include "platform::mingwbourne"
 }
 
-
-platform::mingw32::buildpath()
-{
-   platform::mingw::buildpath
-}
+mulle::platform::initialize
 
 :
 

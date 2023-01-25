@@ -106,31 +106,50 @@ platform::search::r_platform_searchpath()
    then
       local cc
 
-      case "${MULLE_UNAME}" in
-         mingw|windows)
-            cc="`mudo -f which mulle-clang-cl.exe`"
-         ;;
+      cc="${CC}"
+      if [ -z "${cc}" ]
+      then
+         case "${MULLE_UNAME}" in
+            'mingw'|'msys'|'windows')
+# don't need cc on windows
+#               cc="`mudo -f which gcc.exe`"
+#               if [ -z "${cc}" ]
+#               then
+#                  cc="`mudo -f which mulle-clang-cl.exe`"
+#               else
+#                  if [ -z "${cc}" ]
+#                  then
+#                     cc="`mudo -f which clang-cl.exe`"
+#                  else
+#                     if [ -z "${cc}" ]
+#                     then
+#                        cc="`mudo -f which cl.exe`"
+#                     fi
+#                  fi
+#               fi
+            ;;
 
-         *)
-            MULLE_PLATFORM_SEARCHPATH="/usr/local/lib:/usr/lib"
+            *)
+               MULLE_PLATFORM_SEARCHPATH="/usr/local/lib:/usr/lib"
 
-            cc="`mudo -f which gcc`"
-            if [ -z "${cc}" ]
-            then
-               cc="`mudo -f which clang`"
-            else
+               cc="`mudo -f which gcc`"
                if [ -z "${cc}" ]
                then
-                  cc="`mudo -f which mulle-clang`"
+                  cc="`mudo -f which clang`"
+               else
+                  if [ -z "${cc}" ]
+                  then
+                     cc="`mudo -f which mulle-clang`"
+                  fi
                fi
-            fi
-         ;;
-      esac
+            ;;
+         esac
+      fi
 
       local filepath
 
       case "${MULLE_UNAME}" in
-         darwin)
+         'darwin')
             filepath="`rexekutor xcrun --show-sdk-path`"
             if [ ! -z "${filepath}" ]
             then
@@ -138,7 +157,7 @@ platform::search::r_platform_searchpath()
             fi
          ;;
 
-         windows|mingw)
+         'windows'|'mingw')
             # it's something like
             #  /mnt/c/Program\ Files\ \(x86\)/Windows\ Kits/10/Lib/10.0.18362.0/um/x64            
             # how do we get this ? well...
@@ -146,10 +165,11 @@ platform::search::r_platform_searchpath()
             filepath="${RVAL}"
          ;;
 
+         # guess msys should to this
          *)
             filepath="`rexekutor "${cc:-cc}" -Xlinker --verbose  2>/dev/null \
                        | sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp'  \
-                       | egrep -v '^$' \
+                       | grep -E -v '^$' \
                        | sed 's/[ \t]*$//' \
                        | tr '\012' ':' `"
          ;;
@@ -164,7 +184,7 @@ platform::search::r_platform_searchpath()
             MULLE_PLATFORM_SEARCHPATH="${filepath}"
          fi
       else
-         log_warning "Could not figure out system library paths, using platform defaults"
+         log_warning "Could not figure out system library paths with \"${cc}\", using platform defaults"
       fi
    fi
 

@@ -84,8 +84,8 @@ platform::includepath::r_platform_includepath()
          filepath="`echo "${filepath}" \
                | sed -n -e '/^ /s/^\ \([^(]*\).*/\1/p' \
                | sed 's/[ \t]*$//' \
-               | egrep -v '/Frameworks$' \
-               | egrep -v '^$' \
+               | grep -E -v '/Frameworks$' \
+               | grep -E -v '^$' \
                | tr '\012' "${separator}" `"
          filepath="${filepath%%:}"
          filepath="${filepath##:}"

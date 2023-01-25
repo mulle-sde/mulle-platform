@@ -78,7 +78,7 @@ platform::environment::__get_fix_definitions()
          _option_rpath="-Wl,-rpath="
       ;;
 
-      mingw*|windows)
+      'mingw'|'msys'|'windows')
          _option_rpath=""
          _option_libpath="-libpath:" # no space is important
          _option_linklib=""
@@ -115,7 +115,7 @@ platform::environment::r_whole_archive_format()
    case "${wholearchiveformat}" in
       DEFAULT)
          case "${MULLE_UNAME}" in
-            mingw*|windows)
+            'mingw'|'msys'|'windows')
                RVAL="whole-archive-win"
             ;;
 
@@ -131,7 +131,7 @@ platform::environment::r_whole_archive_format()
 
       STATIC)
          case "${MULLE_UNAME}" in
-            mingw*|windows)
+            'mingw'|'msys'|'windows')
                RVAL="whole-archive-win"
             ;;
 
