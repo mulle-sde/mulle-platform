@@ -30,7 +30,7 @@
 #   POSSIBILITY OF SUCH DAMAGE.
 #
 
-MULLE_PLATFORM_SEARCHPATH_SH="included"
+MULLE_PLATFORM_SEARCHPATH_SH='included'
 
 
 platform::searchpath::usage()

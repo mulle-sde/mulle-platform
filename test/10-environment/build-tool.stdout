@@ -1,0 +1,5 @@
+CC="gcc"
+CXX="g++"
+CMAKE="cmake"
+CMAKE_GENERATOR="Unix Makefiles"
+MAKE="make"

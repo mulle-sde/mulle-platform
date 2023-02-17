@@ -30,7 +30,7 @@
 #   POSSIBILITY OF SUCH DAMAGE.
 #
 
-MULLE_PLATFORM_SDKPATH_SH="included"
+MULLE_PLATFORM_SDKPATH_SH='included'
 
 
 platform::sdkpath::usage()

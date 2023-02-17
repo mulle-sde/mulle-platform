@@ -1,6 +1,6 @@
-# shellcheck shell=bash
+# shellcheck shell=sh
 #
-#   Copyright (c) 2021 Nat! - Mulle kybernetiK
+#   Copyright (c) 2015 Nat! - Mulle kybernetiK
 #   All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
@@ -29,33 +29,88 @@
 #   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #   POSSIBILITY OF SUCH DAMAGE.
 #
-MULLE_PLATFORM_WSL_SH='included'
+MULLE_PLATFORM_MINGWBOURNE_SH='included'
 
 
+# DO NOT USE MULLE_BASHFUNCTIONS HERE, DO NOT USE BASH FEATURES
 #
-# TODO: use mulle-platform for all this
+# this code is included by "bourne shell" scripts
 #
-platform::wsl::r_wslpath()
+#
+# mingw32-make can't have sh.exe or in its path, so remove it
+# do not use mulle-bashfunctions here
+#
+mingw_bitness()
 {
-   if [ ! -e "$1" ]
-   then
-      r_dirname "$1"
-      platform::wsl::r_wslpath "${RVAL}"
-      tmp="${RVAL}"
-
-      r_basename "$1"
-      RVAL="${tmp}\\${RVAL}"
-      return
-   fi
-
-   RVAL="`wslpath -w "$1" `"
+   uname | sed -e 's/MINGW\([0-9]*\)_.*/\1/'
 }
 
 
 
-platform::wsl::wslpath()
+r_mingw_find_msvc_executable()
 {
-   shift
-   platform::wsl::r_wslpath "$1"
-   printf "%s\n" "${RVAL}"
+   DEFAULT_IFS="${IFS}"
+   IFS=':'
+   set -f
+
+   for i  in ${3:-$PATH}
+   do
+      case "${i}" in
+         /usr/*|/bin)
+            continue
+         ;;
+
+         *)
+            executable="${i}/${1:-cl.exe}"
+            if [ -x "${executable}" ]
+            then
+               # echo "MSVC ${name} found as ${executable}" >&2
+               RVAL="${executable}"
+               return
+            fi
+         ;;
+      esac
+   done
+
+   RVAL=""
+   return 1
 }
+
+
+mingw_buildpath()
+{
+   DEFAULT_IFS="${IFS}"
+   IFS=':'
+   set -f
+
+   for i in $PATH
+   do
+      IFS="${DEFAULT_IFS}"
+      set +f
+
+      if [ -x "${i}/sh.exe" ]
+      then
+         echo "Removed \"$i\" from build PATH because it contains sh" >&2
+         continue
+      fi
+
+      if [ -z "${buildpath}" ]
+      then
+         buildpath="${i}"
+      else
+         buildpath="${buildpath}:${i}"
+      fi
+   done
+
+   IFS="${DEFAULT_IFS}"
+   set +f
+
+   echo "link.exe: `PATH="${buildpath}" /usr/bin/which link.exe`" >&2
+   echo "Modified PATH: ${buildpath}" >&2
+
+   printf "%s\n" "${buildpath}"
+}
+
+
+:
+

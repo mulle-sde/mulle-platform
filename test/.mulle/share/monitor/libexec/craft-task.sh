@@ -1,6 +1,6 @@
-# shellcheck shell=bash
+#! /usr/bin/env bash
 #
-#   Copyright (c) 2021 Nat! - Mulle kybernetiK
+#   Copyright (c) 2018 Nat! - Mulle kybernetiK
 #   All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
@@ -29,33 +29,33 @@
 #   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #   POSSIBILITY OF SUCH DAMAGE.
 #
-MULLE_PLATFORM_WSL_SH='included'
-
-
-#
-# TODO: use mulle-platform for all this
-#
-platform::wsl::r_wslpath()
+craft_task_run()
 {
-   if [ ! -e "$1" ]
-   then
-      r_dirname "$1"
-      platform::wsl::r_wslpath "${RVAL}"
-      tmp="${RVAL}"
+   log_entry "mulle-sde/sde:: craft_task_run" "$@"
 
-      r_basename "$1"
-      RVAL="${tmp}\\${RVAL}"
-      return
+   log_fluff "==> Craft"
+
+   #
+   # remove running test jobs, as they are invalid now
+   # but only if we restart them
+   #
+   if [ "${MULLE_SDE_TEST_AFTER_CRAFT}" = 'YES' ]
+   then
+      monitor::task::remove_job "test"
    fi
 
-   RVAL="`wslpath -w "$1" `"
+   if ! eval_exekutor mulle-sde "${MULLE_TECHNICAL_FLAGS}" \
+                                "${MULLE_CRAFT_TASK_FLAGS}" \
+                        craft "$@" \
+                           "${MULLE_CRAFT_TASK_ARGS}"
+   then
+      return 1
+   fi
+
+   if [ "${MULLE_SDE_TEST_AFTER_CRAFT}" = 'YES' ]
+   then
+      monitor::task::run "test"
+   fi
 }
 
 
-
-platform::wsl::wslpath()
-{
-   shift
-   platform::wsl::r_wslpath "$1"
-   printf "%s\n" "${RVAL}"
-}

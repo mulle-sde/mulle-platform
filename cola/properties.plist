@@ -1,0 +1,12 @@
+{
+   project =
+   {
+      description="👠 Query platform specifica and search for libraries";
+      domain="github";
+      name="mulle-platform";
+      username="mulle-sde";
+      reponame="mulle-platform";
+      homepage="https://github.com/mulle-sde/mulle-platform";
+      license="BSD-3-Clause"
+   };
+}

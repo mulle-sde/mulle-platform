@@ -30,7 +30,7 @@
 #   POSSIBILITY OF SUCH DAMAGE.
 #
 
-MULLE_PLATFORM_INCLUDEPATH_SH="included"
+MULLE_PLATFORM_INCLUDEPATH_SH='included'
 
 
 platform::includepath::usage()

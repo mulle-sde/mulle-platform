@@ -30,7 +30,7 @@
 #   POSSIBILITY OF SUCH DAMAGE.
 #
 
-MULLE_PLATFORM_SEARCH_SH="included"
+MULLE_PLATFORM_SEARCH_SH='included'
 
 
 platform::search::usage()
@@ -268,6 +268,8 @@ platform::search::r_platform_search()
    local _suffix_dynamiclib
    local _suffix_framework
    local _suffix_staticlib
+   local _suffix_object
+   local _suffix_executable
    local _r_path_mangler
 
    platform::environment::__get_fix_definitions
@@ -328,7 +330,7 @@ platform::search::main()
          ;;
 
          --prefer)
-            [ $# -eq 1 ] && platform::search::usage "mMssing argument to \"$1\""
+            [ $# -eq 1 ] && platform::search::usage "Missing argument to \"$1\""
             shift
             OPTION_PREFER="$1"
 
@@ -343,7 +345,7 @@ platform::search::main()
          ;;
 
          --require)
-            [ $# -eq 1 ] && platform::search::usage "mMssing argument to \"$1\""
+            [ $# -eq 1 ] && platform::search::usage "Missing argument to \"$1\""
             shift
             OPTION_REQUIRE="$1"
 

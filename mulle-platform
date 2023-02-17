@@ -32,7 +32,7 @@
 #
 [ "${TRACE}" = 'YES' -o "${MULLE_PLATFORM_TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
-MULLE_EXECUTABLE_VERSION="1.0.2"
+MULLE_EXECUTABLE_VERSION="1.1.0"
 
 
 #
@@ -50,18 +50,18 @@ fi
 platform::print_commands()
 {
    SHOWN_COMMANDS="\
+   environment   : output a list platform specific information in env style
    search        : search for an OS library
    includepath   : print path for OS headers
    searchpath    : print searchpath for OS libraries
    translate     : translate link commands
-   wholearchive  : produce linker command for whole archive linking
-"
+   wholearchive  : produce linker command for whole archive linking"
 
    HIDDEN_COMMANDS="\
-   sdkpath     : print SDK path
-   libexec-dir : print path to mulle-platform libexec
-   uname       : mulle-platforms simplified uname(1)
-   version     : print mulle-platform version"
+   sdkpath       : print SDK path
+   libexec-dir   : print path to mulle-platform libexec
+   uname         : mulle-platforms simplified uname(1)
+   version       : print mulle-platform version"
 
 
    printf "%s\n" "${SHOWN_COMMANDS}"
@@ -75,9 +75,9 @@ platform::print_commands()
 
 platform::print_flags()
 {
-   echo "   -f          : force operation"
+   echo "   -f            : force operation"
 
-   options_technical_flags_usage "       : "
+   options_technical_flags_usage "         : "
 }
 
 
@@ -179,6 +179,13 @@ platform::main()
    [ $# -eq 0 ] || shift
 
    case "${cmd}" in
+      'env'|'environment')
+         # shellcheck source=src/mulle-platform-environment.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
+
+         platform::environment::main "$@"
+      ;;
+
       'includepath')
          # if you rename this command, search for '***' and rename as well
          # shellcheck source=src/mulle-platform-includepath.sh
@@ -232,6 +239,7 @@ platform::main()
       'uname')
          printf "%s\n" "${MULLE_UNAME}"
       ;;
+
 
       'version')
          printf "%s\n" "${MULLE_EXECUTABLE_VERSION}"

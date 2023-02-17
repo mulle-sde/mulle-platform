@@ -29,7 +29,7 @@
 #   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #   POSSIBILITY OF SUCH DAMAGE.
 #
-MULLE_PLATFORM_MINGW_SH="included"
+MULLE_PLATFORM_MINGW_SH='included'
 
 #
 # The configure plugin can't use nmake on mingw it must use mingw32-make

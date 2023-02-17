@@ -30,7 +30,7 @@
 #   POSSIBILITY OF SUCH DAMAGE.
 #
 
-MULLE_PLATFORM_TRANSLATE_SH="included"
+MULLE_PLATFORM_TRANSLATE_SH='included'
 
 
 platform::translate::usage()
@@ -612,6 +612,8 @@ platform::translate::_r_translate_lines()
    local _prefix_lib
    local _option_linklib
    local _suffix_staticlib
+   local _suffix_object
+   local _suffix_executable
    local _option_link_mode
    local _r_path_mangler
 
