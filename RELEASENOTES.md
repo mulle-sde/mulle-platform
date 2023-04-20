@@ -1,3 +1,11 @@
+## 1.1.0
+
+* greatly improved **environment** command to support mulle-test
+* fixes for mingw
+* added a few tests, yay
+* cross-platform tweaks and fixes
+
+
 ### 1.0.2
 
 * Various small improvements
