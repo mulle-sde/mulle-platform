@@ -128,6 +128,8 @@ platform::search::r_search_library()
    shift 4
 
    local name
+   local first_type
+   local second_type
 
    while [ $# -ne 0 ]
    do
@@ -170,9 +172,6 @@ platform::search::r_search_library()
          shift
          continue
       fi
-
-      local first_type
-      local second_type
 
       first_type=static
       second_type=dynamic
