@@ -540,8 +540,9 @@ platform::translate::_r_translate_rpath()
    local csv="$1"
    local dynamiclibsuffix="$2"   # _suffix_dynamiclib (.so)
    local option_rpath="$3"
-   local r_path_mangler="$4"
-   local quote="$5"
+   local option_rpath_value_prefix="$4"
+   local r_path_mangler="$5"
+   local quote="$6"
 
    local name
    local lines
@@ -562,7 +563,7 @@ platform::translate::_r_translate_rpath()
             /*${dynamiclibsuffix})
                r_dirname "${name}"
                ${r_path_mangler} "${RVAL}"
-               RVAL="${option_rpath}${quote}${RVAL}${quote}"
+               RVAL="${option_rpath}${option_rpath_value_prefix}${quote}${RVAL}${quote}"
             ;;
 
             *)
@@ -609,6 +610,7 @@ platform::translate::_r_translate_lines()
    local _option_libpath
    local _option_frameworkpath
    local _option_rpath
+   local _option_rpath_value_prefix
    local _prefix_lib
    local _option_linklib
    local _suffix_staticlib
@@ -683,6 +685,7 @@ platform::translate::_r_translate_lines()
                                   "${csv}" \
                                   "${_suffix_dynamiclib}" \
                                   "${_option_rpath}" \
+                                  "${_option_rpath_value_prefix}" \
                                   "${_r_path_mangler}" \
                                   "${quote}"
          ;;

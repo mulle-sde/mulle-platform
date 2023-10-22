@@ -262,6 +262,7 @@ platform::search::r_platform_search()
    local _option_link_mode
    local _option_linklib
    local _option_rpath
+   local _option_rpath_value_prefix
    local _prefix_framework
    local _prefix_lib
    local _suffix_dynamiclib

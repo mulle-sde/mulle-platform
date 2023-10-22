@@ -59,6 +59,7 @@ Example:
    local MULLE_PLATFORM_LINK_MODE
    local MULLE_PLATFORM_OBJECT_SUFFIX
    local MULLE_PLATFORM_RPATH_LDFLAG
+   local MULLE_PLATFORM_RPATH_VALUE_PREFIX
    local MULLE_PLATFORM_WHOLE_ARCHIVE_LDFLAG_DEFAULT
    local MULLE_PLATFORM_WHOLE_ARCHIVE_LDFLAG_STATIC
 
@@ -211,6 +212,7 @@ platform::environment::__get_build_tools()
 # local _option_frameworkpath
 # local _option_libpath
 # local _option_rpath
+# local _option_rpath_value_prefix
 # local _option_link_mode
 # local _option_linklib
 # local _prefix_framework
@@ -232,7 +234,8 @@ platform::environment::__get_fix_definitions()
    _option_frameworkpath=""
    _option_libpath="-L"
    _option_linklib="-l"
-   _option_rpath="-Wl,-rpath " # keep space
+   _option_rpath="-Wl,-rpath"
+   _option_rpath_value_prefix=" -Wl," # keep space
    _prefix_framework=""
    _prefix_lib="lib"
    _option_link_mode="basename,no-suffix"
@@ -251,10 +254,12 @@ platform::environment::__get_fix_definitions()
 
       linux)
          _option_rpath="-Wl,-rpath="
+         _option_rpath_value_prefix=""
       ;;
 
       'mingw'|'msys'|'windows')
          _option_rpath=""
+         _option_rpath_value_prefix=""
          _option_libpath="-libpath:" # no space is important
          _option_linklib=""
          _prefix_lib=""
@@ -287,6 +292,7 @@ platform::environment::__get_fix_definitions()
 # local _option_frameworkpath
 # local _option_libpath
 # local _option_rpath
+# local _option_rpath_value_prefix
 # local _option_link_mode
 # local _option_linklib
 # local _prefix_framework
@@ -310,6 +316,7 @@ platform::environment::__get_exe_definitions()
    case "${platform}" in
       'mingw'|'msys'|'windows')
          _option_rpath=""
+         _option_rpath_value_prefix=""
          _option_libpath="-libpath:" # no space is important
          _option_linklib=""
          _prefix_lib=""
@@ -463,6 +470,7 @@ platform::environment::main()
       local _option_frameworkpath
       local _option_libpath
       local _option_rpath
+      local _option_rpath_value_prefix
       local _option_link_mode
       local _option_linklib
       local _prefix_framework
@@ -500,6 +508,8 @@ platform::environment::main()
       printf "%s=\"%s\"\n" "MULLE_PLATFORM_OBJECT_SUFFIX" "${RVAL}"
       r_escaped_doublequotes "${_option_rpath}"
       printf "%s=\"%s\"\n" "MULLE_PLATFORM_RPATH_LDFLAG" "${RVAL}"
+      r_escaped_doublequotes "${_option_rpath_value_prefix}"
+      printf "%s=\"%s\"\n" "MULLE_PLATFORM_RPATH_VALUE_PREFIX" "${RVAL}"
 
       platform::environment::r_whole_archive_format "DEFAULT" "${OPTION_PLATFORM}"
       r_escaped_doublequotes "${RVAL}"
