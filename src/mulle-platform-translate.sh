@@ -427,7 +427,7 @@ platform::translate::_r_translate_ldpath()
       ;;
 
       *)
-         log_fluff "Relative path \"${name}\" ignored"
+         log_debug "Relative path \"${name}\" ignored"
       ;;
    esac
 
@@ -567,7 +567,7 @@ platform::translate::_r_translate_rpath()
             ;;
 
             *)
-               log_fluff "\"${name}\" without \"${dynamiclibsuffix}\" suffix ignored for RPATH"
+               log_debug "\"${name}\" without \"${dynamiclibsuffix}\" suffix ignored for RPATH"
             ;;
          esac
       ;;

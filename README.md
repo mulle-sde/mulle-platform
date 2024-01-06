@@ -13,7 +13,9 @@ For example `mulle-platform search dl` returns
 
 | Release Version                                       | Release Notes
 |-------------------------------------------------------|--------------
-| ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-sde/mulle-platform.svg?branch=release) | [RELEASENOTES](RELEASENOTES.md) |
+| ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-sde/mulle-platform.svg?branch=release)  | [RELEASENOTES](RELEASENOTES.md) |
+
+
 
 
 
@@ -26,7 +28,7 @@ For example `mulle-platform search dl` returns
 ## Install
 
 See [mulle-sde-developer](//github.com/mulle-sde/mulle-sde-developer) how to
-install mulle-sde, which will also install mulle-platform and required
+install mulle-sde, which will also install mulle-platform with required
 dependencies.
 
 The command to install only the latest mulle-platform into
@@ -42,3 +44,5 @@ curl -L 'https://github.com/mulle-sde/mulle-platform/archive/latest.tar.gz' \
 ## Author
 
 [Nat!](https://mulle-kybernetik.com/weblog) for Mulle kybernetiK
+
+

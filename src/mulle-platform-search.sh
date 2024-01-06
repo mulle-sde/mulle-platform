@@ -58,7 +58,27 @@ EOF
 }
 
 
-# some values are passed in via global vars!
+platform::search::r_search_file()
+{
+   log_entry "platform::search::r_search_file" "$@"
+
+   local directory="$1"
+   local name="$2"
+   local type="$3"
+
+   r_filepath_concat "${directory}" "${name}"
+
+   if [ -f "${RVAL}" ]
+   then
+      log_debug "Found ${type} \"${RVAL}\""
+      return 0
+   else
+      log_debug "Did not find a ${type} \"${RVAL}\""
+      return 1
+   fi
+}
+
+
 platform::search::r_search_static_library()
 {
    log_entry "platform::search::r_search_static_library" "$@"
@@ -66,11 +86,9 @@ platform::search::r_search_static_library()
    local directory="$1"
    local name="$2"
 
-   r_filepath_concat "${directory}" "${_prefix_lib}${name}${_suffix_staticlib}"
-
-   log_fluff "Looking for static library \"${RVAL}\""
-
-   [ -f "${RVAL}" ]
+   platform::search::r_search_file "${directory}" \
+                                   "${_prefix_lib}${name}${_suffix_staticlib}" \
+                                   "static library"
 }
 
 
@@ -82,11 +100,9 @@ platform::search::r_search_dynamic_library()
    local directory="$1"
    local name="$2"
 
-   r_filepath_concat "${directory}" "${_prefix_lib}${name}${_suffix_dynamiclib}"
-
-   log_fluff "Looking for dynamic library \"${RVAL}\""
-
-   [ -f "${RVAL}" ]
+   platform::search::r_search_file "${directory}" \
+                                   "${_prefix_lib}${name}${_suffix_dynamiclib}" \
+                                   "dynamic library"
 }
 
 
@@ -101,15 +117,10 @@ platform::search::r_search_library_type()
    local prefix="$4"
    local suffix="$5"
 
-   if "platform::search::r_search_${type}_library" "${directory}" \
-                                                   "${name}" \
-                                                   "${prefix}" \
-                                                   "${suffix}"
-   then
-      log_fluff "Found"
-      return 0
-   fi
-   return 1
+   "platform::search::r_search_${type}_library" "${directory}" \
+                                                "${name}" \
+                                                "${prefix}" \
+                                                "${suffix}"
 }
 
 
