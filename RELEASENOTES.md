@@ -1,3 +1,8 @@
+## 1.2.0
+
+* Various small improvements
+
+
 ## 1.1.0
 
 * greatly improved **environment** command to support mulle-test
