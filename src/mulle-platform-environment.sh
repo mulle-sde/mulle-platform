@@ -393,6 +393,24 @@ platform::environment::r_whole_archive_format()
 }
 
 
+platform::environment::print_var()
+{
+   local key="$1"
+
+   r_escaped_doublequotes "${!key}"
+   printf "%s=\"%s\"\n" "${key}" "${RVAL}"
+}
+
+
+platform::environment::print_kv()
+{
+   local key="$1"
+   local value="$2"
+
+   r_escaped_doublequotes "${value}"
+   printf "%s=\"%s\"\n" "${key}" "${RVAL}"
+}
+
 
 platform::environment::main()
 {
@@ -453,16 +471,11 @@ platform::environment::main()
    then
       platform::environment::__get_build_tools "${OPTION_PLATFORM}"
 
-      r_escaped_doublequotes "${CC}"
-      printf "%s=\"%s\"\n" "CC" "${RVAL}"
-      r_escaped_doublequotes "${CXX}"
-      printf "%s=\"%s\"\n" "CXX" "${RVAL}"
-      r_escaped_doublequotes "${CMAKE}"
-      printf "%s=\"%s\"\n" "CMAKE" "${CMAKE}"
-      r_escaped_doublequotes "${CMAKE_GENERATOR}"
-      printf "%s=\"%s\"\n" "CMAKE_GENERATOR" "${CMAKE_GENERATOR}"
-      r_escaped_doublequotes "${MAKE}"
-      printf "%s=\"%s\"\n" "MAKE" "${MAKE}"
+      platform::environment::print_var 'CC'
+      platform::environment::print_var 'CXX'
+      platform::environment::print_var 'CMAKE'
+      platform::environment::print_var 'CMAKE_GENERATOR'
+      platform::environment::print_var 'MAKE'
    fi
 
    if [ "${OPTION_LIBRARY}" != 'NO' ]
@@ -484,39 +497,29 @@ platform::environment::main()
 
       platform::environment::__get_fix_definitions "${OPTION_PLATFORM}"
 
-      r_escaped_doublequotes "${_suffix_executable}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_EXECUTABLE_SUFFIX" "${RVAL}"
-      r_escaped_doublequotes "${_option_frameworkpath}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_FRAMEWORK_PATH_LDFLAG" "${RVAL}"
-      r_escaped_doublequotes "${_prefix_framework}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_FRAMEWORK_PREFIX" "${RVAL}"
-      r_escaped_doublequotes "${_suffix_framework}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_FRAMEWORK_SUFFIX" "${RVAL}"
-      r_escaped_doublequotes "${_option_linklib}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_LIBRARY_LDFLAG" "${RVAL}"
-      r_escaped_doublequotes "${_option_libpath}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_LIBRARY_PATH_LDFLAG" "${RVAL}"
-      r_escaped_doublequotes "${_prefix_lib}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_LIBRARY_PREFIX" "${RVAL}"
-      r_escaped_doublequotes "${_suffix_staticlib}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_LIBRARY_SUFFIX_STATIC" "${RVAL}"
-      r_escaped_doublequotes "${_suffix_dynamiclib}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_LIBRARY_SUFFIX_DYNAMIC" "${RVAL}"
-      r_escaped_doublequotes "${_option_link_mode}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_LINK_MODE" "${RVAL}"
-      r_escaped_doublequotes "${_suffix_object}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_OBJECT_SUFFIX" "${RVAL}"
-      r_escaped_doublequotes "${_option_rpath}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_RPATH_LDFLAG" "${RVAL}"
-      r_escaped_doublequotes "${_option_rpath_value_prefix}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_RPATH_VALUE_PREFIX" "${RVAL}"
+      platform::environment::print_kv "MULLE_PLATFORM_EXECUTABLE_SUFFIX" "${_suffix_executable}"
+      case "${MULLE_UNAME}" in
+         darwin)
+            platform::environment::print_kv "MULLE_PLATFORM_FRAMEWORK_PATH_LDFLAG" "${_option_frameworkpath}"
+            platform::environment::print_kv "MULLE_PLATFORM_FRAMEWORK_PREFIX" "${_prefix_framework}"
+            platform::environment::print_kv "MULLE_PLATFORM_FRAMEWORK_SUFFIX" "${_suffix_framework}"
+         ;;
+      esac
+
+      platform::environment::print_kv "MULLE_PLATFORM_LIBRARY_LDFLAG" "${_option_linklib}"
+      platform::environment::print_kv "MULLE_PLATFORM_LIBRARY_PATH_LDFLAG" "${_option_libpath}"
+      platform::environment::print_kv "MULLE_PLATFORM_LIBRARY_PREFIX" "${_prefix_lib}"
+      platform::environment::print_kv "MULLE_PLATFORM_LIBRARY_SUFFIX_STATIC" "${_suffix_staticlib}"
+      platform::environment::print_kv "MULLE_PLATFORM_LIBRARY_SUFFIX_DYNAMIC" "${_suffix_dynamiclib}"
+      platform::environment::print_kv "MULLE_PLATFORM_LINK_MODE" "${_option_link_mode}"
+      platform::environment::print_kv "MULLE_PLATFORM_OBJECT_SUFFIX" "${_suffix_object}"
+      platform::environment::print_kv "MULLE_PLATFORM_RPATH_LDFLAG" "${_option_rpath}"
+      platform::environment::print_kv "MULLE_PLATFORM_RPATH_VALUE_PREFIX" "${_option_rpath_value_prefix}"
 
       platform::environment::r_whole_archive_format "DEFAULT" "${OPTION_PLATFORM}"
-      r_escaped_doublequotes "${RVAL}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_WHOLE_ARCHIVE_LDFLAG_DEFAULT" "${RVAL}"
+      platform::environment::print_kv "MULLE_PLATFORM_WHOLE_ARCHIVE_LDFLAG_DEFAULT" "${RVAL}"
 
       platform::environment::r_whole_archive_format "STATIC" "${OPTION_PLATFORM}"
-      r_escaped_doublequotes "${RVAL}"
-      printf "%s=\"%s\"\n" "MULLE_PLATFORM_WHOLE_ARCHIVE_LDFLAG_STATIC" "${RVAL}"
+      platform::environment::print_kv "MULLE_PLATFORM_WHOLE_ARCHIVE_LDFLAG_STATIC" "${RVAL}"
    fi
 }
