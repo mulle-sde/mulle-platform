@@ -397,7 +397,8 @@ platform::environment::print_var()
 {
    local key="$1"
 
-   r_escaped_doublequotes "${!key}"
+   r_shell_indirect_expand "${key}"
+   r_escaped_doublequotes "${RVAL}"
    printf "%s=\"%s\"\n" "${key}" "${RVAL}"
 }
 

@@ -1,3 +1,7 @@
+### 1.2.2
+
+* Various small improvements
+
 ### 1.2.1
 
 * fix tests, do not output FRAMEWORK environment variables on non-darwin
