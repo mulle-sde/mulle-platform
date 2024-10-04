@@ -311,7 +311,7 @@ platform::translate::_r_translate_ld()
    if [ "${name}" != "${csv}" ]
    then
       marks="${csv#*;}"
-      marks="${marks%%;*}" # superflous
+      marks="${marks%%;*}" # superfluous
    fi
 
    #
@@ -406,7 +406,7 @@ platform::translate::_r_translate_ldpath()
    if [ "${name}" != "${csv}" ]
    then
       marks="${csv#*;}"
-      marks="${marks%%;*}" # superflous
+      marks="${marks%%;*}" # superfluous
    fi
 
    # emit -L statements (and -F statements (hacque))

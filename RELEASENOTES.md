@@ -1,3 +1,7 @@
+### 1.2.3
+
+Various small improvements
+
 ### 1.2.2
 
 * Various small improvements

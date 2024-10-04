@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.0)
 
-project( mulle-platform NONE)
+project( mulle-platform VERSION 1.2.3 LANGUAGES NONE)
 
 #
 # Primarily used for packaging on Linux
@@ -16,7 +16,7 @@ project( mulle-platform NONE)
 #
 
 execute_process( COMMAND ./mulle-platform version
-                 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+                 WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
                  OUTPUT_VARIABLE MULLE_PLATFORM_VERSION
                  OUTPUT_STRIP_TRAILING_WHITESPACE)
 message( STATUS "MULLE_PLATFORM_VERSION is ${MULLE_PLATFORM_VERSION} according to mulle-platform")
@@ -59,4 +59,3 @@ DESTINATION "libexec/mulle-platform")
 # must be after CPACK_PACKAGE_VERSION
 include( CMakePackage.cmake)
 include( CPack)
-
