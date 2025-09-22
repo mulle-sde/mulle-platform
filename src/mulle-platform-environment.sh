@@ -466,7 +466,7 @@ platform::environment::main()
       shift
    done
 
-   [ $# -eq 0 ] || platform::environment::usage "Superflous arguments \"$\""
+   [ $# -eq 0 ] || platform::environment::usage "Superfluous arguments \"$\""
 
    if [ "${OPTION_BUILD_TOOLS}" = 'YES' ]
    then

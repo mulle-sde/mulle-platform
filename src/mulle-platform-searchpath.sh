@@ -218,7 +218,7 @@ platform::searchpath::main()
       shift
    done
 
-   [ $# -eq 0 ] || platform::searchpath::usage "Superflous parameters \"$*\""
+   [ $# -eq 0 ] || platform::searchpath::usage "Superfluous parameters \"$*\""
 
    platform::search::r_platform_searchpath
    [ ! -z "${RVAL}" ] && printf "%s\n" "${RVAL}"

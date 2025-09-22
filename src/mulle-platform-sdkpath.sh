@@ -93,7 +93,7 @@ platform::sdkpath::main()
       shift
    done
 
-   [ $# -eq 0 ] || platform::sdkpath::usage "Superflous parameters \"$*\""
+   [ $# -eq 0 ] || platform::sdkpath::usage "Superfluous parameters \"$*\""
 
    local functionname
 

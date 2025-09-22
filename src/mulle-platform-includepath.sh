@@ -133,7 +133,7 @@ platform::includepath::main()
       shift
    done
 
-   [ $# -eq 0 ] || platform::includepath::usage "Superflous parameters \"$*\""
+   [ $# -eq 0 ] || platform::includepath::usage "Superfluous parameters \"$*\""
 
    platform::includepath::r_platform_includepath "${OPTION_SEPARATOR}"
    [ ! -z "${RVAL}" ] && printf "%s\n" "${RVAL}"
