@@ -32,7 +32,7 @@
 #
 [ "${TRACE}" = 'YES' -o "${MULLE_PLATFORM_TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
-MULLE_EXECUTABLE_VERSION="1.2.3"
+MULLE_EXECUTABLE_VERSION="1.2.4"
 
 
 #
@@ -89,6 +89,10 @@ platform::usage()
 Usage:
    ${MULLE_USAGE_NAME} [flags] <command> [options]
 
+   mulle-platform is the central knowledge dispenser on platform differences
+   for the mulle-sde build system. You for example figure out which suffix a
+   shared library needs on a given platform.
+   
 Flags:
 EOF
    platform::print_flags | LC_ALL=C sort >&2

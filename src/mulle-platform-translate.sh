@@ -619,15 +619,20 @@ platform::translate::_r_translate_lines()
    local _option_link_mode
    local _r_path_mangler
 
-   platform::environment::__get_fix_definitions
+   local platform 
 
+   platform="${MULLE_CRAFT_PLATFORMS%%:*}"
+   platform="${platform:-${MULLE_UNAME}}"
+
+   platform::environment::__get_fix_definitions "${platform}"
+   
    local name
    local lines
    local csv
 
-   [ "${option}" = "DEFAULT" ] && option="${_option_linklib}"
-   [ "${prefix}" = "DEFAULT" ] && prefix="${_prefix_lib}"
-   [ "${mode}"   = "DEFAULT" ] && mode="${_option_link_mode}"
+   [ "${option}" = 'DEFAULT' ] && option="${_option_linklib}"
+   [ "${prefix}" = 'DEFAULT' ] && prefix="${_prefix_lib}"
+   [ "${mode}"   = 'DEFAULT' ] && mode="${_option_link_mode}"
 
    platform::environment::r_whole_archive_format "${wholearchiveformat}"
    wholearchiveformat="${RVAL}"
@@ -728,9 +733,9 @@ platform::translate::r_translate_lines()
    shift 3
 
    platform::translate::_r_translate_lines "${format}" \
-                                           "DEFAULT" \
-                                           "DEFAULT" \
-                                           "DEFAULT" \
+                                           'DEFAULT' \
+                                           'DEFAULT' \
+                                           'DEFAULT' \
                                            "${preferredlibformat}" \
                                            "${wholearchiveformat}" \
                                            "$@"
@@ -744,11 +749,11 @@ platform::translate::main()
    [ -z "${DEFAULT_IFS}" ] && _internal_fail "IFS fail"
 
    local OPTION_OUTPUT_FORMAT="ld"
-   local OPTION_PREFIX="DEFAULT"
-   local OPTION_OPTION="DEFAULT"
-   local OPTION_MODE="DEFAULT"
+   local OPTION_PREFIX='DEFAULT'
+   local OPTION_OPTION='DEFAULT'
+   local OPTION_MODE='DEFAULT'
    local OPTION_MARKS
-   local OPTION_WHOLE_ARCHIVE_FORMAT="DEFAULT"
+   local OPTION_WHOLE_ARCHIVE_FORMAT='DEFAULT'
    local OPTION_PREFERRED_LIBRARY_STYLE='static'
    local OPTION_SEPARATOR=$'\n'
    local OPTION_QUOTE

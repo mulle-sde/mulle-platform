@@ -49,6 +49,7 @@ Usage:
 
 Options:
    --prefer <libtype>  : can be "static" or "dynamic" (static)
+   --platform <os>     : specify platform to use (${MULLE_UNAME})
    --require <libtype> : can be "static" or "dynamic" (none)
    --searchpath <path> : a colon separated path to search
    --type <filetype>   : can be "library" or "standalone" (library)
@@ -129,7 +130,7 @@ platform::search::r_search_library()
 {
    log_entry "platform::search::r_search_library" "$@"
 
-   [ $# -gt 4 ] || _internal_fail "API mismatch"
+   [ $# -lt 4 ] && _internal_fail "API mismatch"
 
    local directory="$1"
    local require="$2"
@@ -150,8 +151,8 @@ platform::search::r_search_library()
       if [  "${type}" = 'standalone' ]
       then
          if platform::search::r_search_library_type "dynamic" \
-                                                     "${directory}" \
-                                                     "${name}-standalone"
+                                                    "${directory}" \
+                                                    "${name}-standalone"
          then
             return 0
          fi
@@ -161,8 +162,8 @@ platform::search::r_search_library()
          # need a -standalone library
          #
          if platform::search::r_search_library_type "dynamic" \
-                                                     "${directory}" \
-                                                     "${name}"
+                                                    "${directory}" \
+                                                    "${name}"
          then
             return 0
          fi
@@ -174,8 +175,8 @@ platform::search::r_search_library()
       if [ ! -z "${require}" ]
       then
          if platform::search::r_search_library_type "${require}" \
-                                                     "${directory}" \
-                                                     "${name}"
+                                                    "${directory}" \
+                                                    "${name}"
          then
             return 0
          fi
@@ -195,15 +196,15 @@ platform::search::r_search_library()
       esac
 
       if platform::search::r_search_library_type "${first_type}" \
-                                                  "${directory}" \
-                                                  "${name}"
+                                                 "${directory}" \
+                                                 "${name}"
       then
          return 0
       fi
 
       if platform::search::r_search_library_type "${second_type}" \
-                                                  "${directory}" \
-                                                  "${name}"
+                                                 "${directory}" \
+                                                 "${name}"
       then
          return 0
       fi
@@ -253,10 +254,12 @@ platform::search::r_platform_search()
    log_entry "platform::search::r_platform_search" "$@"
 
    local searchpath="$1"
-   local type="$2"
-   local prefer="$3"
-   local require="$4"
-   shift 4
+   local platform="$2"
+   local type="$3"
+   local prefer="$4"
+   local require="$5"
+
+   shift 5
 
    include "platform::environment"
 
@@ -283,7 +286,7 @@ platform::search::r_platform_search()
    local _suffix_executable
    local _r_path_mangler
 
-   platform::environment::__get_fix_definitions
+   platform::environment::__get_fix_definitions "${platform}"
 
    local directory
 
@@ -306,10 +309,10 @@ platform::search::r_platform_search()
          fi
       else
          if platform::search::r_search_library "${directory}" \
-                                                "${type}" \
-                                                "${prefer}" \
-                                                "${require}" \
-                                                "$@"
+                                               "${type}" \
+                                               "${prefer}" \
+                                               "${require}" \
+                                               "$@"
          then
             return 0
          fi
@@ -332,6 +335,7 @@ platform::search::main()
    local OPTION_PREFER="static"
    local OPTION_REQUIRE=
    local OPTION_TYPE="library"
+   local OPTION_PLATFORM="${MULLE_UNAME}"
 
    while [ $# -ne 0 ]
    do
@@ -339,6 +343,14 @@ platform::search::main()
          -h*|--help|help)
             platform::search::usage
          ;;
+
+
+         --platform)
+            [ $# -eq 1 ] && platform::search::usage "Missing argument to \"$1\""
+            shift
+
+            OPTION_PLATFORM="$1"
+         ;; 
 
          --prefer)
             [ $# -eq 1 ] && platform::search::usage "Missing argument to \"$1\""
@@ -408,6 +420,7 @@ platform::search::main()
    [ $# -ne 0 ] || platform::search::usage "Missing name"
 
    if platform::search::r_platform_search "${OPTION_SEARCH_PATH}" \
+                                          "${OPTION_PLATFORM}" \
                                           "${OPTION_TYPE}" \
                                           "${OPTION_PREFER}" \
                                           "${OPTION_REQUIRE}" \

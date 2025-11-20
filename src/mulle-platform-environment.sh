@@ -258,21 +258,38 @@ platform::environment::__get_fix_definitions()
       ;;
 
       'mingw'|'msys'|'windows')
-         _option_rpath=""
-         _option_rpath_value_prefix=""
-         _option_libpath="-libpath:" # no space is important
-         _option_linklib=""
-         _prefix_lib=""
-         _strip_suffix='NO'
-         _suffix_dynamiclib=".dll"
-         _suffix_staticlib=".lib"
-         _option_link_mode="basename,no-suffix,add-suffix-staticlib"
-         _suffix_object=".obj"
-         _suffix_executable=".exe"
+         case "${MULLE_UNAME}" in  
+            'mingw'|'msys'|'windows')
+               _option_rpath=""
+               _option_rpath_value_prefix=""
+               _option_libpath="-libpath:" # no space is important
+               _option_linklib=""
+               _prefix_lib=""
+               _strip_suffix='NO'
+               _suffix_dynamiclib=".dll"
+               _suffix_staticlib=".lib"
+               _option_link_mode="basename,no-suffix,add-suffix-staticlib"
+               _suffix_object=".obj"
+               _suffix_executable=".exe"
+            ;;
+
+            # cross compile
+            *)
+               _option_rpath=""
+               _option_rpath_value_prefix=""
+               _prefix_lib="lib"
+               _strip_suffix='NO'
+               _suffix_dynamiclib=".dll"
+               _suffix_staticlib=".a"
+               _option_link_mode="basename,no-suffix,add-suffix-staticlib"
+               _suffix_object=".obj"
+               _suffix_executable=".exe"
+            ;;
+         esac
       ;;
    esac
 
-   case "${platform}" in
+   case "${MULLE_UNAME}" in
       windows)
          include "platform::wsl"
 
@@ -517,7 +534,7 @@ platform::environment::main()
       platform::environment::print_kv "MULLE_PLATFORM_RPATH_LDFLAG" "${_option_rpath}"
       platform::environment::print_kv "MULLE_PLATFORM_RPATH_VALUE_PREFIX" "${_option_rpath_value_prefix}"
 
-      platform::environment::r_whole_archive_format "DEFAULT" "${OPTION_PLATFORM}"
+      platform::environment::r_whole_archive_format 'DEFAULT' "${OPTION_PLATFORM}"
       platform::environment::print_kv "MULLE_PLATFORM_WHOLE_ARCHIVE_LDFLAG_DEFAULT" "${RVAL}"
 
       platform::environment::r_whole_archive_format "STATIC" "${OPTION_PLATFORM}"
