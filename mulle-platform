@@ -50,9 +50,17 @@ fi
 platform::print_commands()
 {
    SHOWN_COMMANDS="\
+   compiler run  : generate and execute platform-appropriate compile command
+   compiler env  : select and configure compiler for platform/language
+   compiler list : list installed compilers on the system
    environment   : output a list platform specific information in env style
-   search        : search for an OS library
+   export        : produce linker flags for exporting a symbol
+   flags         : generate platform and configuration-appropriate flags
    includepath   : print path for OS headers
+   languages     : list available languages and dialects
+   link          : generate and execute platform-appropriate link command
+   quirks        : check for platform-specific behaviors
+   search        : search for an OS library
    searchpath    : print searchpath for OS libraries
    translate     : translate link commands
    wholearchive  : produce linker command for whole archive linking"
@@ -183,11 +191,51 @@ platform::main()
    [ $# -eq 0 ] || shift
 
    case "${cmd}" in
+      'compiler')
+         local subcmd="$1"
+         [ $# -eq 0 ] || shift
+
+         case "${subcmd}" in
+            'run')
+               # shellcheck source=src/mulle-platform-compile.sh
+               . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-compile.sh"
+               platform::compile::main "$@"
+            ;;
+            'env')
+               # shellcheck source=src/mulle-platform-compiler.sh
+               . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-compiler.sh"
+               platform::compiler::main "$@"
+            ;;
+            'list')
+               # shellcheck source=src/mulle-platform-compilers.sh
+               . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-compilers.sh"
+               platform::compilers::main "$@"
+            ;;
+            *)
+               fail "Unknown compiler subcommand '${subcmd}'. Use: run, env, or list"
+            ;;
+         esac
+      ;;
+
       'env'|'environment')
          # shellcheck source=src/mulle-platform-environment.sh
          . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
 
          platform::environment::main "$@"
+      ;;
+
+      'export')
+         # shellcheck source=src/mulle-platform-export.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-export.sh"
+
+         platform::export::main "$@"
+      ;;
+
+      'flags')
+         # shellcheck source=src/mulle-platform-compiler-flags.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-compiler-flags.sh"
+
+         platform::compiler_flags::main "$@"
       ;;
 
       'includepath')
@@ -196,6 +244,27 @@ platform::main()
          . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-includepath.sh"
 
          platform::includepath::main "$@"
+      ;;
+
+      'languages')
+         # shellcheck source=src/mulle-platform-languages.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-languages.sh"
+
+         platform::languages::main "$@"
+      ;;
+
+      'link')
+         # shellcheck source=src/mulle-platform-link.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-link.sh"
+
+         platform::link::main "$@"
+      ;;
+
+      'quirks')
+         # shellcheck source=src/mulle-platform-quirks.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-quirks.sh"
+
+         platform::quirks::main "$@"
       ;;
 
       'sdkpath')

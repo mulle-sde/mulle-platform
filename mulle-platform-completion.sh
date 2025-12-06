@@ -17,18 +17,46 @@ _mulle_platform_complete()
 
    # No command yet, complete commands
    if [[ $cword -eq 1 ]]; then
-      COMPREPLY=($(compgen -W "env environment search includepath searchpath translate wholearchive sdkpath libexec-dir uname version" -- "$cur"))
+      COMPREPLY=($(compgen -W "compiler compilers env environment flags includepath languages quirks search searchpath translate wholearchive sdkpath libexec-dir uname version" -- "$cur"))
       return 0
    fi
 
    # Check for verboseness or hidden commands
    # Since it's hard to check MULLE_FLAG_LOG_VERBOSE here, include hidden commands anyway
    if [[ $cword -eq 1 ]]; then
-      COMPREPLY=($(compgen -W "env environment search includepath searchpath translate wholearchive sdkpath libexec-dir uname version" -- "$cur"))
+      COMPREPLY=($(compgen -W "compiler compilers env environment flags includepath languages quirks search searchpath translate wholearchive sdkpath libexec-dir uname version" -- "$cur"))
       return 0
    fi
 
    case "$cmd" in
+      compiler)
+         if [[ "$prev" == --platform ]]; then
+            COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --language ]]; then
+            COMPREPLY=($(compgen -W "c" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --dialect ]]; then
+            COMPREPLY=($(compgen -W "c objc" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --compiler-type ]]; then
+            COMPREPLY=($(compgen -W "gcc clang mulle-clang cl" -- "$cur"))
+            return 0
+         fi
+         if [[ "$cur" == -* ]]; then
+            COMPREPLY=($(compgen -W "--platform --language --dialect --objc-dialect --compiler-type --print-env --print-json" -- "$cur"))
+            return 0
+         fi
+         ;;
+      compilers)
+         if [[ "$cur" == -* ]]; then
+            COMPREPLY=($(compgen -W "--verbose" -- "$cur"))
+            return 0
+         fi
+         ;;
       env|environment)
          if [[ "$prev" == --platform ]]; then
             COMPREPLY=($(compgen -W "$(uname -s | tr '[:upper:]' '[:lower:]')" -- "$cur"))  # Default to current, but fixed
@@ -36,6 +64,66 @@ _mulle_platform_complete()
          fi
          if [[ "$cur" == -* ]]; then
             COMPREPLY=($(compgen -W "-b --build-tools --no-build-tools -l --library --no-library --platform" -- "$cur"))
+            return 0
+         fi
+         ;;
+      flags)
+         if [[ "$prev" == --platform ]]; then
+            COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --language ]]; then
+            COMPREPLY=($(compgen -W "c" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --dialect ]]; then
+            COMPREPLY=($(compgen -W "c objc" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --configuration ]]; then
+            COMPREPLY=($(compgen -W "Debug Release Test RelWithDebInfo" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --compiler-type ]]; then
+            COMPREPLY=($(compgen -W "gcc clang mulle-clang msvc" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --type ]]; then
+            COMPREPLY=($(compgen -W "compile link both" -- "$cur"))
+            return 0
+         fi
+         if [[ "$cur" == -* ]]; then
+            COMPREPLY=($(compgen -W "--platform --language --dialect --objc-dialect --configuration --compiler-type --type --print-env --print-list" -- "$cur"))
+            return 0
+         fi
+         ;;
+      includepath)
+         if [[ "$cur" == -* ]]; then
+            COMPREPLY=($(compgen -W "--cmake" -- "$cur"))
+            return 0
+         fi
+         ;;
+      languages)
+         if [[ "$prev" == --compiler-type ]]; then
+            COMPREPLY=($(compgen -W "gcc clang mulle-clang msvc" -- "$cur"))
+            return 0
+         fi
+         if [[ "$cur" == -* ]]; then
+            COMPREPLY=($(compgen -W "--compiler-type" -- "$cur"))
+            return 0
+         fi
+         ;;
+      quirks)
+         if [[ "$prev" == --platform ]]; then
+            COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --check ]]; then
+            COMPREPLY=($(compgen -W "mingw-needs-link-flag needs-exported-symbols windows-needs-dll-path msvc-needs-md-flag needs-pic-for-shared supports-rpath needs-framework-flag needs-whole-archive uses-dyld uses-ld-library-path needs-no-common" -- "$cur"))
+            return 0
+         fi
+         if [[ "$cur" == -* ]]; then
+            COMPREPLY=($(compgen -W "--platform --check" -- "$cur"))
             return 0
          fi
          ;;
@@ -58,12 +146,6 @@ _mulle_platform_complete()
          fi
          if [[ "$cur" == -* ]]; then
             COMPREPLY=($(compgen -W "--prefer --require --searchpath --type --output-format" -- "$cur"))
-            return 0
-         fi
-         ;;
-      includepath)
-         if [[ "$cur" == -* ]]; then
-            COMPREPLY=($(compgen -W "--cmake" -- "$cur"))
             return 0
          fi
          ;;
