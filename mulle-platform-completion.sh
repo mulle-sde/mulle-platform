@@ -5,6 +5,7 @@ _mulle_platform_complete()
    _get_comp_words_by_ref -n : cur prev words cword
 
    local cmd="${words[1]}"
+   local subcmd="${words[2]}"
    local i=1
 
    # Global options
@@ -17,53 +18,113 @@ _mulle_platform_complete()
 
    # No command yet, complete commands
    if [[ $cword -eq 1 ]]; then
-      COMPREPLY=($(compgen -W "compiler compilers env environment flags includepath languages quirks search searchpath translate wholearchive sdkpath libexec-dir uname version" -- "$cur"))
-      return 0
-   fi
-
-   # Check for verboseness or hidden commands
-   # Since it's hard to check MULLE_FLAG_LOG_VERBOSE here, include hidden commands anyway
-   if [[ $cword -eq 1 ]]; then
-      COMPREPLY=($(compgen -W "compiler compilers env environment flags includepath languages quirks search searchpath translate wholearchive sdkpath libexec-dir uname version" -- "$cur"))
+      COMPREPLY=($(compgen -W "compiler env environment export flags includepath languages link quirks search searchpath translate wholearchive sdkpath libexec-dir uname version" -- "$cur"))
       return 0
    fi
 
    case "$cmd" in
       compiler)
+         # Handle compiler subcommands
+         if [[ $cword -eq 2 ]]; then
+            COMPREPLY=($(compgen -W "run env list" -- "$cur"))
+            return 0
+         fi
+
+         case "$subcmd" in
+            run)
+               # compiler run (compile) options
+               if [[ "$prev" == --platform ]]; then
+                  COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == --language ]]; then
+                  COMPREPLY=($(compgen -W "c cpp objc objcpp" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == --dialect ]]; then
+                  COMPREPLY=($(compgen -W "c objc mulle-objc" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == --configuration ]]; then
+                  COMPREPLY=($(compgen -W "Debug Release Test RelWithDebInfo" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == --compiler-type ]]; then
+                  COMPREPLY=($(compgen -W "gcc clang mulle-clang cl" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == --sanitizer ]]; then
+                  COMPREPLY=($(compgen -W "address thread undefined" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == -F || "$prev" == -I || "$prev" == -L || "$prev" == --rpath ]]; then
+                  COMPREPLY=($(compgen -d -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == -o ]]; then
+                  COMPREPLY=($(compgen -f -- "$cur"))
+                  return 0
+               fi
+               if [[ "$cur" == -* ]]; then
+                  COMPREPLY=($(compgen -W "--platform --language --dialect --configuration --compiler-type -F -I -D -c --shared --sanitizer --coverage --export-symbol --output-asm --emit-llvm --show-headers --rpath -L -l --wholearchive -Wl -o --print-only" -- "$cur"))
+                  return 0
+               fi
+               COMPREPLY=($(compgen -f -- "$cur"))
+               return 0
+               ;;
+            env)
+               # compiler env options
+               if [[ "$prev" == --platform ]]; then
+                  COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == --language ]]; then
+                  COMPREPLY=($(compgen -W "c cpp objc objcpp" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == --dialect ]]; then
+                  COMPREPLY=($(compgen -W "c objc mulle-objc" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$prev" == --compiler-type ]]; then
+                  COMPREPLY=($(compgen -W "gcc clang mulle-clang cl" -- "$cur"))
+                  return 0
+               fi
+               if [[ "$cur" == -* ]]; then
+                  COMPREPLY=($(compgen -W "--platform --language --dialect --compiler-type --print-env --print-json" -- "$cur"))
+                  return 0
+               fi
+               ;;
+            list)
+               # compiler list (compilers) options
+               if [[ "$cur" == -* ]]; then
+                  COMPREPLY=($(compgen -W "--verbose" -- "$cur"))
+                  return 0
+               fi
+               ;;
+         esac
+         ;;
+      env|environment)
          if [[ "$prev" == --platform ]]; then
             COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
             return 0
          fi
-         if [[ "$prev" == --language ]]; then
-            COMPREPLY=($(compgen -W "c" -- "$cur"))
+         if [[ "$cur" == -* ]]; then
+            COMPREPLY=($(compgen -W "-b --build-tools --no-build-tools -l --library --no-library --platform" -- "$cur"))
             return 0
          fi
-         if [[ "$prev" == --dialect ]]; then
-            COMPREPLY=($(compgen -W "c objc" -- "$cur"))
+         ;;
+      export)
+         if [[ "$prev" == --platform ]]; then
+            COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
             return 0
          fi
          if [[ "$prev" == --compiler-type ]]; then
-            COMPREPLY=($(compgen -W "gcc clang mulle-clang cl" -- "$cur"))
+            COMPREPLY=($(compgen -W "gcc clang mulle-clang msvc" -- "$cur"))
             return 0
          fi
          if [[ "$cur" == -* ]]; then
-            COMPREPLY=($(compgen -W "--platform --language --dialect --objc-dialect --compiler-type --print-env --print-json" -- "$cur"))
-            return 0
-         fi
-         ;;
-      compilers)
-         if [[ "$cur" == -* ]]; then
-            COMPREPLY=($(compgen -W "--verbose" -- "$cur"))
-            return 0
-         fi
-         ;;
-      env|environment)
-         if [[ "$prev" == --platform ]]; then
-            COMPREPLY=($(compgen -W "$(uname -s | tr '[:upper:]' '[:lower:]')" -- "$cur"))  # Default to current, but fixed
-            return 0
-         fi
-         if [[ "$cur" == -* ]]; then
-            COMPREPLY=($(compgen -W "-b --build-tools --no-build-tools -l --library --no-library --platform" -- "$cur"))
+            COMPREPLY=($(compgen -W "--platform --compiler-type --compiler --linker" -- "$cur"))
             return 0
          fi
          ;;
@@ -73,11 +134,11 @@ _mulle_platform_complete()
             return 0
          fi
          if [[ "$prev" == --language ]]; then
-            COMPREPLY=($(compgen -W "c" -- "$cur"))
+            COMPREPLY=($(compgen -W "c cpp objc objcpp" -- "$cur"))
             return 0
          fi
          if [[ "$prev" == --dialect ]]; then
-            COMPREPLY=($(compgen -W "c objc" -- "$cur"))
+            COMPREPLY=($(compgen -W "c objc mulle-objc" -- "$cur"))
             return 0
          fi
          if [[ "$prev" == --configuration ]]; then
@@ -85,7 +146,7 @@ _mulle_platform_complete()
             return 0
          fi
          if [[ "$prev" == --compiler-type ]]; then
-            COMPREPLY=($(compgen -W "gcc clang mulle-clang msvc" -- "$cur"))
+            COMPREPLY=($(compgen -W "gcc clang mulle-clang msvc cl" -- "$cur"))
             return 0
          fi
          if [[ "$prev" == --type ]]; then
@@ -93,7 +154,7 @@ _mulle_platform_complete()
             return 0
          fi
          if [[ "$cur" == -* ]]; then
-            COMPREPLY=($(compgen -W "--platform --language --dialect --objc-dialect --configuration --compiler-type --type --print-env --print-list" -- "$cur"))
+            COMPREPLY=($(compgen -W "--platform --language --dialect --configuration --compiler-type --type --print-env --print-list" -- "$cur"))
             return 0
          fi
          ;;
@@ -105,7 +166,7 @@ _mulle_platform_complete()
          ;;
       languages)
          if [[ "$prev" == --compiler-type ]]; then
-            COMPREPLY=($(compgen -W "gcc clang mulle-clang msvc" -- "$cur"))
+            COMPREPLY=($(compgen -W "gcc clang mulle-clang msvc cl" -- "$cur"))
             return 0
          fi
          if [[ "$cur" == -* ]]; then
@@ -113,17 +174,59 @@ _mulle_platform_complete()
             return 0
          fi
          ;;
+      link)
+         if [[ "$prev" == --platform ]]; then
+            COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --language ]]; then
+            COMPREPLY=($(compgen -W "c cpp objc objcpp" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --dialect ]]; then
+            COMPREPLY=($(compgen -W "c objc mulle-objc" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --configuration ]]; then
+            COMPREPLY=($(compgen -W "Debug Release Test RelWithDebInfo" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == --compiler-type ]]; then
+            COMPREPLY=($(compgen -W "gcc clang mulle-clang cl" -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == -L || "$prev" == -F ]]; then
+            COMPREPLY=($(compgen -d -- "$cur"))
+            return 0
+         fi
+         if [[ "$prev" == -o ]]; then
+            COMPREPLY=($(compgen -f -- "$cur"))
+            return 0
+         fi
+         if [[ "$cur" == -* ]]; then
+            COMPREPLY=($(compgen -W "--platform --language --dialect --configuration --compiler-type -L -l -F -framework -o --shared --print-only" -- "$cur"))
+            return 0
+         fi
+         COMPREPLY=($(compgen -f -- "$cur"))
+         return 0
+         ;;
       quirks)
          if [[ "$prev" == --platform ]]; then
             COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
             return 0
          fi
-         if [[ "$prev" == --check ]]; then
-            COMPREPLY=($(compgen -W "mingw-needs-link-flag needs-exported-symbols windows-needs-dll-path msvc-needs-md-flag needs-pic-for-shared supports-rpath needs-framework-flag needs-whole-archive uses-dyld uses-ld-library-path needs-no-common" -- "$cur"))
+         if [[ "$cur" == -* ]]; then
+            COMPREPLY=($(compgen -W "--platform" -- "$cur"))
             return 0
          fi
-         if [[ "$cur" == -* ]]; then
-            COMPREPLY=($(compgen -W "--platform --check" -- "$cur"))
+         # Handle subcommands: list, show, check
+         if [[ $cword -eq 2 ]]; then
+            COMPREPLY=($(compgen -W "list show check" -- "$cur"))
+            return 0
+         fi
+         # If subcommand is check, complete with quirk names
+         if [[ "${words[2]}" == "check" && $cword -eq 3 ]]; then
+            COMPREPLY=($(compgen -W "mingw-needs-link-flag needs-exported-symbols windows-needs-dll-path msvc-needs-md-flag needs-pic-for-shared supports-rpath needs-framework-flag needs-whole-archive uses-dyld uses-ld-library-path needs-no-common supports-sanitizer-address supports-sanitizer-thread supports-sanitizer-undefined supports-sanitizer-memory supports-sanitizer-leak supports-coverage" -- "$cur"))
             return 0
          fi
          ;;
@@ -132,59 +235,57 @@ _mulle_platform_complete()
             COMPREPLY=($(compgen -W "static dynamic" -- "$cur"))
             return 0
          fi
+         if [[ "$prev" == --platform ]]; then
+            COMPREPLY=($(compgen -W "linux darwin mingw windows freebsd openbsd netbsd dragonfly sunos" -- "$cur"))
+            return 0
+         fi
          if [[ "$prev" == --type ]]; then
             COMPREPLY=($(compgen -W "library standalone framework" -- "$cur"))
             return 0
          fi
          if [[ "$prev" == --output-format ]]; then
-            COMPREPLY=($(compgen -W "file ld" -- "$cur"))  # As per usage
+            COMPREPLY=($(compgen -W "file ld" -- "$cur"))
             return 0
          fi
          if [[ "$prev" == --searchpath ]]; then
-            COMPREPLY=($(compgen -d -- "$cur"))  # Directory paths
+            COMPREPLY=($(compgen -d -- "$cur"))
             return 0
          fi
          if [[ "$cur" == -* ]]; then
-            COMPREPLY=($(compgen -W "--prefer --require --searchpath --type --output-format" -- "$cur"))
+            COMPREPLY=($(compgen -W "--prefer --require --platform --searchpath --type --output-format" -- "$cur"))
             return 0
          fi
          ;;
       searchpath)
          if [[ "$cur" == -* ]]; then
-            COMPREPLY=($(compgen -W "" -- "$cur"))  # No options
+            COMPREPLY=()
             return 0
          fi
          ;;
       translate)
-         # Many options, list key ones
          if [[ "$prev" == --output-format ]]; then
             COMPREPLY=($(compgen -W "ld file ldpath ld_library_path path rpath" -- "$cur"))
             return 0
          fi
          if [[ "$prev" == --separator ]]; then
-            COMPREPLY=($(compgen -W "$(printf '%q\n' $'\n')" -- "$cur"))  # Suggest newline or other
+            COMPREPLY=()
             return 0
          fi
          if [[ "$prev" == --quote ]]; then
-            COMPREPLY=($(compgen -W "\"" "'" -- "$cur"))
-            return 0
-         fi
-         if [[ "$prev" == --option || "$prev" == --prefix || "$prev" == --mode || "$prev" == --marks || "$prev" == --preferred-library-style || "$prev" == --whole-archive-format ]]; then
-            COMPREPLY=()  # Free form
+            COMPREPLY=($(compgen -W "\" '" -- "$cur"))
             return 0
          fi
          if [[ "$cur" == -* ]]; then
             COMPREPLY=($(compgen -W "--option --output-format --separator --quote --prefix --mode --marks --preferred-library-style --whole-archive-format --dynamic --static --standalone --fake-uname" -- "$cur"))
             return 0
          fi
-         COMPREPLY=($(compgen -f -- "$cur"))  # File paths for <filename>
+         COMPREPLY=($(compgen -f -- "$cur"))
          return 0
          ;;
       wholearchive)
-         # No options, no args
          ;;
       sdkpath|libexec-dir|uname|version)
-         ;;  # No options or args
+         ;;
    esac
 
    return 0
