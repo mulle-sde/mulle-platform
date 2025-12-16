@@ -153,8 +153,12 @@ _mulle_platform_complete()
             COMPREPLY=($(compgen -W "compile link both" -- "$cur"))
             return 0
          fi
+         if [[ "$prev" == --sanitizer ]]; then
+            COMPREPLY=($(compgen -W "address thread undefined memory leak" -- "$cur"))
+            return 0
+         fi
          if [[ "$cur" == -* ]]; then
-            COMPREPLY=($(compgen -W "--platform --language --dialect --configuration --compiler-type --type --print-env --print-list" -- "$cur"))
+            COMPREPLY=($(compgen -W "--platform --language --dialect --configuration --compiler-type --type --sanitizer --print-env --print-list" -- "$cur"))
             return 0
          fi
          ;;

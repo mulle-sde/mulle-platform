@@ -39,7 +39,7 @@ platform::compiler_flags::usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} flags [options]
+   ${MULLE_USAGE_NAME} compiler flags [options]
 
    Generate platform and configuration-appropriate compiler/linker flags.
    Output is in environment variable format suitable for eval.
@@ -51,6 +51,7 @@ Options:
    --configuration <name>   : Debug, Release, Test, RelWithDebInfo (default: Debug)
    --compiler-type <type>   : Compiler type (gcc, clang, msvc)
    --type <type>            : Flag type: compile, link, or both (default: both)
+   --sanitizer <type>       : Enable sanitizer (address, thread, undefined) (can be repeated)
    --print-env              : Output as environment variables (default)
    --print-list             : Output as space-separated list
 
@@ -88,6 +89,7 @@ platform::compiler_flags::main()
    local OPTION_COMPILER_TYPE
    local OPTION_FLAG_TYPE="both"
    local OPTION_OUTPUT_FORMAT="env"
+   local -a sanitizers
 
    while [ $# -ne 0 ]
    do
@@ -145,6 +147,12 @@ platform::compiler_flags::main()
             esac
          ;;
 
+         --sanitizer)
+            [ $# -eq 1 ] && platform::compiler_flags::usage "Missing argument to \"$1\""
+            shift
+            sanitizers+=( "$1" )
+         ;;
+
          --print-env)
             OPTION_OUTPUT_FORMAT="env"
          ;;
@@ -182,7 +190,7 @@ platform::compiler_flags::main()
    # Detect compiler type if not specified
    if [ -z "${OPTION_COMPILER_TYPE}" ]
    then
-      include "platform::compiler"
+      include "platform::compiler-environment"
 
       platform::compiler::r_select_c_compiler "${OPTION_PLATFORM}" \
                                               "${OPTION_DIALECT}" \
@@ -252,6 +260,38 @@ platform::compiler_flags::main()
       platform::plugin::compiler::${plugin_name}::get_ldflags "${OPTION_CONFIGURATION}" \
                                                               "${OPTION_PLATFORM}"
       ldflags="${RVAL}"
+   fi
+
+   # Add sanitizer flags if requested
+   if [ ${#sanitizers[@]} -gt 0 ]
+   then
+      local sanitizer
+      local sanitizer_cflags
+      local sanitizer_ldflags
+
+      for sanitizer in "${sanitizers[@]}"
+      do
+         if [ "${OPTION_FLAG_TYPE}" = "compile" ] || [ "${OPTION_FLAG_TYPE}" = "both" ]
+         then
+            platform::plugin::compiler::${plugin_name}::r_format_sanitizer_flag "${sanitizer}"
+            if [ ! -z "${RVAL}" ]
+            then
+               sanitizer_cflags="${sanitizer_cflags} ${RVAL}"
+            fi
+         fi
+
+         if [ "${OPTION_FLAG_TYPE}" = "link" ] || [ "${OPTION_FLAG_TYPE}" = "both" ]
+         then
+            platform::plugin::compiler::${plugin_name}::r_format_sanitizer_link_flag "${sanitizer}"
+            if [ ! -z "${RVAL}" ]
+            then
+               sanitizer_ldflags="${sanitizer_ldflags} ${RVAL}"
+            fi
+         fi
+      done
+
+      cflags="${cflags}${sanitizer_cflags}"
+      ldflags="${ldflags}${sanitizer_ldflags}"
    fi
 
    # Output results

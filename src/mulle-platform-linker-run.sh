@@ -33,13 +33,13 @@
 MULLE_PLATFORM_LINK_SH='included'
 
 
-platform::link::usage()
+platform::linker_run::usage()
 {
    [ $# -ne 0 ] && log_error "$1"
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} link [options] <object-files...> -o <output-file>
+   ${MULLE_USAGE_NAME} linker run [options] <object-files...> -o <output-file>
 
    Generate and optionally execute a platform-appropriate link command.
    This command translates abstract linker options into concrete ld commands.
@@ -77,9 +77,9 @@ EOF
 }
 
 
-platform::link::main()
+platform::linker_run::main()
 {
-   log_entry "platform::link::main" "$@"
+   log_entry "platform::linker_run::main" "$@"
 
    local OPTION_PLATFORM="${MULLE_UNAME}"
    local OPTION_LANGUAGE="c"
@@ -102,47 +102,47 @@ platform::link::main()
    do
       case "$1" in
          -h*|--help|help)
-            platform::link::usage
+            platform::linker_run::usage
          ;;
 
          --platform)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             OPTION_PLATFORM="$1"
          ;;
 
          --language)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             OPTION_LANGUAGE="$1"
          ;;
 
          --dialect)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             OPTION_DIALECT="$1"
          ;;
 
          --objc-dialect)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             OPTION_OBJC_DIALECT="$1"
          ;;
 
          --configuration)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             OPTION_CONFIGURATION="$1"
          ;;
 
          --compiler-type)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             OPTION_COMPILER_TYPE="$1"
          ;;
 
          -L)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             libdirs+=( "$1" )
          ;;
@@ -153,7 +153,7 @@ platform::link::main()
          ;;
 
          -l)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             libs+=( "$1" )
          ;;
@@ -164,19 +164,19 @@ platform::link::main()
          ;;
 
          -F)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             framework_dirs+=( "$1" )
          ;;
 
          -framework)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             frameworks+=( "$1" )
          ;;
 
          -o)
-            [ $# -eq 1 ] && platform::link::usage "Missing argument to \"$1\""
+            [ $# -eq 1 ] && platform::linker_run::usage "Missing argument to \"$1\""
             shift
             OPTION_OUTPUT="$1"
          ;;
@@ -196,7 +196,7 @@ platform::link::main()
          ;;
 
          -*)
-            platform::link::usage "Unknown option \"$1\""
+            platform::linker_run::usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -209,12 +209,12 @@ platform::link::main()
    # Validate inputs
    if [ ${#objects[@]} -eq 0 ]
    then
-      platform::link::usage "No object files specified"
+      platform::linker_run::usage "No object files specified"
    fi
 
    if [ -z "${OPTION_OUTPUT}" ]
    then
-      platform::link::usage "No output file specified (use -o)"
+      platform::linker_run::usage "No output file specified (use -o)"
    fi
 
    # Set dialect default based on language if not specified

@@ -489,8 +489,9 @@ platform::environment::main()
    then
       platform::environment::__get_build_tools "${OPTION_PLATFORM}"
 
-      platform::environment::print_var 'CC'
-      platform::environment::print_var 'CXX'
+      # Note: CC and CXX are not emitted here - use 'mulle-platform compiler env' instead
+      # platform::environment::print_var 'CC'
+      # platform::environment::print_var 'CXX'
       platform::environment::print_var 'CMAKE'
       platform::environment::print_var 'CMAKE_GENERATOR'
       platform::environment::print_var 'MAKE'

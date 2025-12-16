@@ -106,7 +106,7 @@ platform::export::main()
       platform::export::usage "Missing symbol argument"
    fi
 
-   include "platform::compiler"
+   include "platform::compiler-environment"
    include "platform::plugin"
 
    local original_mulle_uname="${MULLE_UNAME}"

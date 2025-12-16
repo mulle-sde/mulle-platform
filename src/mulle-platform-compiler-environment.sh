@@ -39,7 +39,7 @@ platform::compiler::usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} compiler [options]
+   ${MULLE_USAGE_NAME} compiler env [options]
 
    Select and configure the appropriate compiler for a platform/language/dialect
    combination. Output is in environment variable format suitable for eval.

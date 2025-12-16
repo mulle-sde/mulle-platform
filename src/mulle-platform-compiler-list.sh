@@ -39,7 +39,7 @@ platform::compilers::usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} compilers [options]
+   ${MULLE_USAGE_NAME} compiler list [options]
 
    List installed compilers on the system.
 

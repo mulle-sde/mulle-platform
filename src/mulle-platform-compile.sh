@@ -39,7 +39,7 @@ platform::compile::usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} compile [options] <source-file> -o <output-file>
+   ${MULLE_USAGE_NAME} compiler run [options] <source-file> -o <output-file>
 
    Generate and optionally execute a platform-appropriate compile command.
    This command translates abstract compiler options into concrete cc/cl commands.
@@ -360,7 +360,7 @@ platform::compile::main()
    fi
 
    # Get compiler
-   include "platform::compiler"
+   include "platform::compiler-environment"
 
    platform::compiler::r_select_c_compiler "${OPTION_PLATFORM}" \
                                            "${OPTION_DIALECT}" \
