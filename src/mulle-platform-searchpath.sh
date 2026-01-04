@@ -167,11 +167,31 @@ platform::search::r_platform_searchpath()
 
          # guess msys should to this
          *)
-            filepath="`rexekutor "${cc:-cc}" -Xlinker --verbose  2>/dev/null \
+            filepath="`rexekutor "${cc:-cc}" -Xlinker --verbose 2>/dev/null \
                        | sed -n -e 's/SEARCH_DIR("=\?\([^"]\+\)"); */\1\n/gp'  \
                        | grep -E -v '^$' \
                        | sed 's/[ \t]*$//' \
                        | tr '\012' ':' `"
+
+            # clumsy hack for cross compilation
+            if [ -z "${filepath}" ]
+            then
+               local line
+               local lines
+               local output
+
+               # can't rexekutor it
+               output=$("${cc:-cc}" -Xlinker --verbose 2>&1 | head -1)
+
+               # here we pick from stderr
+               lines="$(awk '{for(i=1;i<=NF;i++) if ($i ~ /^-libpath:/) print substr( $i, 10)}' <<< "${output}")"
+
+               .foreachline line in ${lines}
+               .do
+                  r_colon_concat "${filepath}" "${line}"
+                  filepath="${RVAL}"
+               .done
+            fi
          ;;
       esac
 
@@ -184,7 +204,7 @@ platform::search::r_platform_searchpath()
             MULLE_PLATFORM_SEARCHPATH="${filepath}"
          fi
       else
-         log_warning "Could not figure out system library paths with \"${cc}\", using platform defaults"
+         log_warning "Could not figure out system library paths with CC=\"${cc}\", using platform defaults"
       fi
    fi
 
