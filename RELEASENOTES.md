@@ -1,3 +1,23 @@
+## 1.3.0
+
+
+
+
+* added pro-forma linker commands like compiler, but not really used as such yet
+
+
+
+* Replace three separate commands with 'compiler' subcommands:
+  - 'compiler run' (was 'compile')
+  - 'compiler env' (was 'compiler')
+  - 'compiler list' (was 'compilers')
+* Update help text to reflect new command structure
+
+
+
+* need to update `cmake_minimum_required` because cmake has a weird concept of min required
+
+
 ### 1.2.3
 
 Various small improvements
