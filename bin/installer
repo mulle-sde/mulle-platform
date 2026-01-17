@@ -181,8 +181,8 @@ main()
    COMPILERS_PLUGIN_DIR="${libexec}/plugins/compilers"
    for i in src/plugins/compilers/*.sh
    do
-      mkdir -p "${PLATFORMS_PLUGIN_DIR}" 2> /dev/null
-      install ${VERBOSE} -m "${mode}" "${i}" "${PLATFORMS_PLUGIN_DIR}" || exit 1
+      mkdir -p "${COMPILERS_PLUGIN_DIR}" 2> /dev/null
+      install ${VERBOSE} -m "${mode}" "${i}" "${COMPILERS_PLUGIN_DIR}" || exit 1
    done
 
    PLATFORMS_PLUGIN_DIR="${libexec}/plugins/platform"
