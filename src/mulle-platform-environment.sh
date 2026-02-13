@@ -280,7 +280,7 @@ platform::environment::__get_fix_definitions()
                _prefix_lib="lib"
                _strip_suffix='NO'
                _suffix_dynamiclib=".dll"
-               _suffix_staticlib=".a"
+               _suffix_staticlib=".a"  # Keep as .a, search will handle .dll.a
                _option_link_mode="basename,no-suffix,add-suffix-staticlib"
                _suffix_object=".obj"
                _suffix_executable=".exe"
@@ -373,7 +373,15 @@ platform::environment::r_whole_archive_format()
       DEFAULT)
          case "${platform}" in
             'mingw'|'msys'|'windows')
-               RVAL="whole-archive-win"
+               # Check if cross-compiling (host != target)
+               if [ "${MULLE_UNAME}" != "${platform}" ]
+               then
+                  # Cross-compiling to Windows with mingw - use GNU ld syntax
+                  RVAL="whole-archive"
+               else
+                  # Native Windows - use MSVC syntax
+                  RVAL="whole-archive-win"
+               fi
             ;;
 
             darwin)
@@ -389,7 +397,15 @@ platform::environment::r_whole_archive_format()
       STATIC)
          case "${platform}" in
             'mingw'|'msys'|'windows')
-               RVAL="whole-archive-win"
+               # Check if cross-compiling (host != target)
+               if [ "${MULLE_UNAME}" != "${platform}" ]
+               then
+                  # Cross-compiling to Windows with mingw - use GNU ld syntax
+                  RVAL="whole-archive"
+               else
+                  # Native Windows - use MSVC syntax
+                  RVAL="whole-archive-win"
+               fi
             ;;
 
             darwin)

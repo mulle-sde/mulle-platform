@@ -109,6 +109,12 @@ platform::translate::is_dynamic_library()
          log_debug "is dynamic because of suffix ${dynamiclibsuffix}"
          return 0
       ;;
+      
+      *.dll.a)
+         # Windows import libraries for DLLs should be treated as dynamic
+         log_debug "is dynamic because of .dll.a suffix (Windows import library)"
+         return 0
+      ;;
    esac
 
    case ",${marks}," in
@@ -176,10 +182,18 @@ platform::translate::_r_translate_ld_static()
    # executables (but currently we don't use it for them)
    case ",${wholearchiveformat}," in
       *',export-dynamic,'*)
-         case "${MULLE_UNAME}" in
-            linux) # ELF linkers really
-               r_concat "${result}" "-Wl,--export-dynamic"
-               result="${RVAL}"
+         # Only add export-dynamic for ELF linkers (Linux), not for Windows
+         case ",${wholearchiveformat}," in
+            *',whole-archive-win,'*)
+               # Skip export-dynamic for Windows
+            ;;
+            *)
+               case "${MULLE_UNAME}" in
+                  linux) # ELF linkers really
+                     r_concat "${result}" "-Wl,--export-dynamic"
+                     result="${RVAL}"
+                  ;;
+               esac
             ;;
          esac
       ;;
@@ -202,8 +216,16 @@ platform::translate::_r_translate_ld_static()
 
    case ",${wholearchiveformat}," in
       *',no-as-needed,'*)
-         r_concat "${result}" "-Wl,--no-as-needed"
-         result="${RVAL}"
+         # Skip no-as-needed for Windows (lld doesn't support it)
+         case ",${wholearchiveformat}," in
+            *',whole-archive-win,'*)
+               # Skip for Windows
+            ;;
+            *)
+               r_concat "${result}" "-Wl,--no-as-needed"
+               result="${RVAL}"
+            ;;
+         esac
       ;;
    esac
 
@@ -225,8 +247,16 @@ platform::translate::_r_translate_ld_static()
 
    case ",${wholearchiveformat}," in
       *',no-as-needed,'*)
-         r_concat "${result}" "-Wl,--as-needed"
-         result="${RVAL}"
+         # Skip as-needed for Windows (lld doesn't support it)
+         case ",${wholearchiveformat}," in
+            *',whole-archive-win,'*)
+               # Skip for Windows
+            ;;
+            *)
+               r_concat "${result}" "-Wl,--as-needed"
+               result="${RVAL}"
+            ;;
+         esac
       ;;
    esac
 
@@ -314,6 +344,33 @@ platform::translate::_r_translate_ld()
       marks="${marks%%;*}" # superfluous
    fi
 
+   # Filter out libraries that are not required for this OS
+   # Use MULLE_CRAFT_PLATFORMS for target platform, fallback to MULLE_UNAME
+   local platform
+   platform="${MULLE_CRAFT_PLATFORMS%%:*}"
+   platform="${platform:-${MULLE_UNAME}}"
+   
+   case ",${marks}," in
+      *,no-require-os-${platform},*)
+         # This library is not required on this platform
+         RVAL=""
+         return
+      ;;
+   esac
+   
+   # Hardcoded filtering for known platform-specific OS libraries
+   case "${platform}" in
+      'mingw'|'msys'|'windows')
+         case "${name}" in
+            pthread|dl)
+               # These are Linux/Unix-only OS libraries
+               RVAL=""
+               return
+            ;;
+         esac
+      ;;
+   esac
+
    #
    # emit -l statements, or -framework for only-framework marks (hacque)
    # these marks are added by the linkorder command they are not really
@@ -332,16 +389,40 @@ platform::translate::_r_translate_ld()
       ;;
    esac
 
-   case ",${mode}," in 
-      *,no-suffix,*)
-         r_extensionless_filename "${ldname}"
-         ldname="${RVAL}"
+   # Strip library extensions - linker adds them back
+   case "${ldname}" in
+      *.dll.a)
+         # Windows import library
+         ldname="${ldname%.dll.a}"
       ;;
-   esac
+      
+      *.a)
+         # Static library - strip .a extension
+         ldname="${ldname%.a}"
+      ;;
+      
+      *)
+         # For OS libraries (no-dependency mark), don't manipulate the name
+         case ",${marks}," in
+            *,no-dependency,*)
+               # OS library - use name as-is, no suffix manipulation
+            ;;
+            
+            *)
+               case ",${mode}," in 
+                  *,no-suffix,*)
+                     r_extensionless_filename "${ldname}"
+                     ldname="${RVAL}"
+                  ;;
+               esac
 
-   case ",${mode}," in 
-      *,add-suffix-staticlib,*)
-         ldname="${ldname}${staticlibsuffix}"
+               case ",${mode}," in 
+                  *,add-suffix-staticlib,*)
+                     ldname="${ldname}${staticlibsuffix}"
+                  ;;
+               esac
+            ;;
+         esac
       ;;
    esac
 

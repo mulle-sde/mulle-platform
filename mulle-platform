@@ -55,6 +55,8 @@ platform::print_commands()
    compiler env  : select and configure compiler for platform/language
    compiler list : list installed compilers on the system
    compiler flags: generate platform and configuration-appropriate flags
+   crosscompiler-root: find cross-compiler toolchain root directory
+   emulator      : get default emulator for cross-platform execution
    environment   : output a list platform specific information in env style
    export        : produce linker flags for exporting a symbol
    flags         : generate platform and configuration-appropriate flags
@@ -235,11 +237,25 @@ platform::main()
          esac
       ;;
 
+      'crosscompiler-root')
+         # shellcheck source=src/mulle-platform-crosscompiler-root.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-crosscompiler-root.sh"
+
+         platform::crosscompiler_root::main "$@"
+      ;;
+
       'env'|'environment')
          # shellcheck source=src/mulle-platform-environment.sh
          . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-environment.sh"
 
          platform::environment::main "$@"
+      ;;
+
+      'emulator')
+         # shellcheck source=src/mulle-platform-emulator.sh
+         . "${MULLE_PLATFORM_LIBEXEC_DIR}/mulle-platform-emulator.sh"
+
+         platform::emulator::main "$@"
       ;;
 
       'export')

@@ -42,10 +42,10 @@ Usage:
    ${MULLE_USAGE_NAME} ${MULLE_USAGE_COMMAND:-search} [options] <name>
 
    Search for files (usually libraries) given a name in the platforms
-   searchpath.
+   searchpath. This is installed software outside your project.
 
    Generally it's preferable to use cmake's \`find_library\` for this, which
-   is more flexable.
+   is more flexible.
 
 Options:
    --prefer <libtype>  : can be "static" or "dynamic" (static)
@@ -87,6 +87,8 @@ platform::search::r_search_static_library()
    local directory="$1"
    local name="$2"
 
+   # For Windows, skip .dll.a files in static search (they're for dynamic linking)
+   # Only search for real static libraries (.a)
    platform::search::r_search_file "${directory}" \
                                    "${_prefix_lib}${name}${_suffix_staticlib}" \
                                    "static library"
@@ -101,9 +103,43 @@ platform::search::r_search_dynamic_library()
    local directory="$1"
    local name="$2"
 
-   platform::search::r_search_file "${directory}" \
+   # First check if the DLL exists
+   if platform::search::r_search_file "${directory}" \
                                    "${_prefix_lib}${name}${_suffix_dynamiclib}" \
                                    "dynamic library"
+   then
+      # For Windows, we need the import library (.dll.a or .lib), not the DLL itself
+      case "${_suffix_dynamiclib}" in
+         .dll)
+            local dll_path="${RVAL}"
+            local import_lib
+
+            # Try .dll.a first (mingw cross-compile)
+            import_lib="${dll_path%.dll}.dll.a"
+            if [ -f "${import_lib}" ]
+            then
+               RVAL="${import_lib}"
+               return 0
+            fi
+
+            # Try .lib (native Windows)
+            import_lib="${dll_path%.dll}.lib"
+            if [ -f "${import_lib}" ]
+            then
+               RVAL="${import_lib}"
+               return 0
+            fi
+
+            # No import library found, return the DLL path anyway
+            # (might fail at link time but at least we found something)
+            return 0
+         ;;
+      esac
+
+      return 0
+   fi
+
+   return 1
 }
 
 
@@ -290,14 +326,11 @@ platform::search::r_platform_search()
 
    local directory
 
-   shell_disable_glob; IFS=':'
-   for directory in ${searchpath}
-   do
-      shell_enable_glob; IFS="${DEFAULT_IFS}"
-
+   .foreachpath directory in ${searchpath}
+   .do
       if [ -z "${directory}" ]
       then
-         continue
+         .continue
       fi
 
       if [ "${type}" = "framework" ]
@@ -317,8 +350,7 @@ platform::search::r_platform_search()
             return 0
          fi
       fi
-   done
-   shell_enable_glob; IFS="${DEFAULT_IFS}"
+   .done
 
    RVAL=""
    return 1

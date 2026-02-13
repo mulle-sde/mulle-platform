@@ -44,4 +44,21 @@ uses-ld-library-path
 needs-whole-archive"
 }
 
+
+platform::plugin::platform::bsd::r_emulator()
+{
+   log_entry "platform::plugin::platform::bsd::r_emulator" "$@"
+
+   local target_platform="$1"
+
+   case "${target_platform}" in
+      windows|mingw*)
+         RVAL="WINEDEBUG=fixme-all,err-all wine"
+      ;;
+      *)
+         RVAL=""
+      ;;
+   esac
+}
+
 :

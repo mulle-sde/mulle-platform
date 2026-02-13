@@ -53,4 +53,26 @@ supports-sanitizer-leak
 supports-coverage"
 }
 
+
+platform::plugin::platform::darwin::r_emulator()
+{
+   log_entry "platform::plugin::platform::darwin::r_emulator" "$@"
+
+   local target_platform="$1"
+
+   case "${target_platform}" in
+      windows|mingw*)
+         if command -v wine >/dev/null 2>&1
+         then
+            RVAL="WINEDEBUG=fixme-all,err-all wine"
+         else
+            RVAL=""
+         fi
+      ;;
+      *)
+         RVAL=""
+      ;;
+   esac
+}
+
 :

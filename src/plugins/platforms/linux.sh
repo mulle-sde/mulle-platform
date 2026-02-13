@@ -50,4 +50,21 @@ supports-sanitizer-memory
 supports-sanitizer-leak"
 }
 
+
+platform::plugin::platform::linux::r_emulator()
+{
+   log_entry "platform::plugin::platform::linux::r_emulator" "$@"
+
+   local target_platform="$1"
+
+   case "${target_platform}" in
+      windows|mingw*)
+         RVAL="WINEDEBUG=fixme-all,err-all wine"
+      ;;
+      *)
+         RVAL=""
+      ;;
+   esac
+}
+
 :
