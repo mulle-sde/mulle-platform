@@ -49,6 +49,7 @@ Options:
    --language <name>        : Language: c, cpp, objc (default: detect from extension)
    --dialect <name>         : Dialect for the language
    --configuration <name>   : Debug, Release, Test, RelWithDebInfo (default: Debug)
+   --no-default-cflags      : Don't add configuration's default CFLAGS (user provides them)
    --compiler-type <type>   : Force compiler type (gcc, clang, mulle-clang, cl)
    -F <dir>                 : Framework directory (can be repeated)
    -I <dir>                 : Include directory (can be repeated)
@@ -178,6 +179,10 @@ platform::compile::main()
             [ $# -eq 1 ] && platform::compile::usage "Missing argument to \"$1\""
             shift
             OPTION_CONFIGURATION="$1"
+         ;;
+
+         --no-default-cflags)
+            OPTION_NO_DEFAULT_CFLAGS='YES'
          ;;
 
          --compiler-type)
@@ -425,11 +430,15 @@ platform::compile::main()
       fail "Failed to load compiler plugin \"${plugin_name}\""
    fi
 
-   # Get base flags from plugin
-   platform::plugin::compiler::${plugin_name}::get_flags "${OPTION_CONFIGURATION}" \
-                                                         "${OPTION_DIALECT}" \
-                                                         "${OPTION_OBJC_DIALECT}"
-   local cflags="${RVAL}"
+   # Get base flags from plugin (unless --no-default-cflags)
+   local cflags
+   if [ "${OPTION_NO_DEFAULT_CFLAGS}" != 'YES' ]
+   then
+      platform::plugin::compiler::${plugin_name}::get_flags "${OPTION_CONFIGURATION}" \
+                                                            "${OPTION_DIALECT}" \
+                                                            "${OPTION_OBJC_DIALECT}"
+      cflags="${RVAL}"
+   fi
 
    # Build command line
    local -a cmdline
@@ -608,16 +617,6 @@ platform::compile::main()
       done
    fi
 
-   # Add coverage link flags (only if not compile-only)
-   if [ "${OPTION_COMPILE_ONLY}" != 'YES' ] && [ "${OPTION_COVERAGE}" = 'YES' ]
-   then
-      platform::plugin::compiler::${plugin_name}::r_format_coverage_link_flag
-      if [ ! -z "${RVAL}" ]
-      then
-         cmdline+=( ${RVAL} )  # Word splitting intentional
-      fi
-   fi
-
    # Add export symbol flags (only if not compile-only)
    if [ "${OPTION_COMPILE_ONLY}" != 'YES' ] && [ ${#export_symbols[@]} -gt 0 ]
    then
@@ -650,6 +649,17 @@ platform::compile::main()
    if [ ${#extra_args[@]} -gt 0 ]
    then
       cmdline+=( "${extra_args[@]}" )
+   fi
+
+   # Add coverage link flags AFTER extra_args so coverage runtime follows all static libs
+   # (GNU ld requires the runtime lib after all libs referencing __gcov_* symbols)
+   if [ "${OPTION_COMPILE_ONLY}" != 'YES' ] && [ "${OPTION_COVERAGE}" = 'YES' ]
+   then
+      platform::plugin::compiler::${plugin_name}::r_format_coverage_link_flag "${compiler_type}"
+      if [ ! -z "${RVAL}" ]
+      then
+         cmdline+=( ${RVAL} )  # Word splitting intentional
+      fi
    fi
 
    # Print or execute

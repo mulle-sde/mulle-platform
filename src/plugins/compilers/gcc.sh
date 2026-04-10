@@ -93,8 +93,13 @@ platform::plugin::compiler::gcc::get_flags()
       objc)
          case "${objc_dialect}" in
             mulle-objc)
-               r_concat "${flags}" "-fobjc-tao"
-               flags="${RVAL}"
+               # Only add -fobjc-tao for Debug and Test configurations
+               case "${configuration}" in
+                  Debug|Test)
+                     r_concat "${flags}" "-fobjc-tao"
+                     flags="${RVAL}"
+                  ;;
+               esac
             ;;
          esac
       ;;

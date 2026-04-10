@@ -103,6 +103,31 @@ platform::search::r_search_dynamic_library()
    local directory="$1"
    local name="$2"
 
+   # For Windows, check for import library directly since DLLs are in bin/ not lib/
+   case "${_suffix_dynamiclib}" in
+      .dll)
+         local import_lib
+
+         # Try .dll.a first (mingw cross-compile)
+         import_lib="${directory}/${_prefix_lib}${name}.dll.a"
+         if [ -f "${import_lib}" ]
+         then
+            log_fluff "Found import library \"${import_lib}\""
+            RVAL="${import_lib}"
+            return 0
+         fi
+
+         # Try .lib (native Windows)
+         import_lib="${directory}/${_prefix_lib}${name}.lib"
+         if [ -f "${import_lib}" ]
+         then
+            log_fluff "Found import library \"${import_lib}\""
+            RVAL="${import_lib}"
+            return 0
+         fi
+      ;;
+   esac
+
    # First check if the DLL exists
    if platform::search::r_search_file "${directory}" \
                                    "${_prefix_lib}${name}${_suffix_dynamiclib}" \
@@ -139,9 +164,25 @@ platform::search::r_search_dynamic_library()
       return 0
    fi
 
+   # Check if wrong library type was built (common cross-compilation error)
+   case "${_suffix_dynamiclib}" in
+      .dll)
+         if [ -f "${directory}/${_prefix_lib}${name}.so" ]
+         then
+            _log_warning "Found ${_prefix_lib}${name}.so but expected ${_prefix_lib}${name}.dll for Windows platform.
+${C_INFO}This usually means the build system didn't use the correct toolchain for cross-compilation."
+         fi
+      ;;
+      .so)
+         if [ -f "${directory}/${_prefix_lib}${name}.dll" ]
+         then
+            log_warning "Found ${_prefix_lib}${name}.dll but expected ${_prefix_lib}${name}.so for this platform."
+         fi
+      ;;
+   esac
+
    return 1
 }
-
 
 # some values are passed in via global vars!
 platform::search::r_search_library_type()

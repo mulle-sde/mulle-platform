@@ -92,8 +92,13 @@ platform::plugin::compiler::mulle-clang::get_flags()
    # Add Objective-C specific flags
    case "${dialect}" in
       objc)
-         r_concat "${flags}" "-fobjc-tao"
-         flags="${RVAL}"
+         # Only add -fobjc-tao for Debug and Test configurations
+         case "${configuration}" in
+            Debug|Test)
+               r_concat "${flags}" "-fobjc-tao"
+               flags="${RVAL}"
+            ;;
+         esac
       ;;
    esac
 

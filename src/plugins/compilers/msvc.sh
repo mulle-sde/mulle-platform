@@ -93,8 +93,13 @@ platform::plugin::compiler::msvc::get_flags()
       objc)
          case "${objc_dialect}" in
             mulle-objc)
-               r_concat "${flags}" "/FOBJC-TAO"
-               flags="${RVAL}"
+               # Only add /FOBJC-TAO for Debug and Test configurations
+               case "${configuration}" in
+                  Debug|Test)
+                     r_concat "${flags}" "/FOBJC-TAO"
+                     flags="${RVAL}"
+                  ;;
+               esac
             ;;
          esac
       ;;

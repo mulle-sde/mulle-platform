@@ -125,7 +125,7 @@ platform::mingw::setup_buildenvironment()
 
 #   if [ -z "${LIBPATH}" -o -z "${INCLUDE}" ] && [ -z "${DONT_USE_VS}" ]
 #   then
-#      log_warning "Environment variables INCLUDE and LIBPATH not set, start MINGW \
+#      _log_warning "Environment variables INCLUDE and LIBPATH not set, start MINGW \
 #inside IDE environment"
 #   fi
 
