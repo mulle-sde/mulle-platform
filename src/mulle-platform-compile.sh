@@ -281,6 +281,10 @@ platform::compile::main()
             export_symbols+=( "$1" )
          ;;
 
+         --export-dynamic)
+            OPTION_EXPORT_DYNAMIC='YES'
+         ;;
+
          --output-asm)
             OPTION_OUTPUT_ASM='YES'
          ;;
@@ -606,7 +610,6 @@ platform::compile::main()
    # Add sanitizer link flags (only if not compile-only)
    if [ "${OPTION_COMPILE_ONLY}" != 'YES' ] && [ ${#sanitizers[@]} -gt 0 ]
    then
-      local sanitizer
       for sanitizer in "${sanitizers[@]}"
       do
          platform::plugin::compiler::${plugin_name}::r_format_sanitizer_link_flag "${sanitizer}"
@@ -618,7 +621,17 @@ platform::compile::main()
    fi
 
    # Add export symbol flags (only if not compile-only)
-   if [ "${OPTION_COMPILE_ONLY}" != 'YES' ] && [ ${#export_symbols[@]} -gt 0 ]
+   #
+   # NB: On Mach-O (Darwin) an explicit -exported_symbol allowlist OVERRIDES
+   # -export_dynamic: the linker then exports *only* the listed symbols. So when
+   # a general export-dynamic is requested, we must NOT emit the per-symbol
+   # allowlist, otherwise arbitrary symbols (e.g. those looked up via
+   # dlsym( RTLD_DEFAULT, ...)) would not be exported. -export_dynamic already
+   # exports the listed startup symbols too, so nothing is lost. On ELF the
+   # per-symbol flag is a no-op, so this only affects Darwin.
+   #
+   if [ "${OPTION_COMPILE_ONLY}" != 'YES' ] && [ ${#export_symbols[@]} -gt 0 ] \
+      && ! { [ "${MULLE_UNAME}" = 'darwin' ] && [ "${OPTION_EXPORT_DYNAMIC}" = 'YES' ]; }
    then
       local export_symbol
       for export_symbol in "${export_symbols[@]}"
@@ -629,6 +642,19 @@ platform::compile::main()
             cmdline+=( ${RVAL} )  # Word splitting intentional
          fi
       done
+   fi
+
+   # Add general export-dynamic flag (only if not compile-only). This makes the
+   # executable's own symbols discoverable via dlsym(RTLD_DEFAULT,...). The flag
+   # is spelled differently per linker (ELF vs Mach-O), so let the plugin format
+   # it.
+   if [ "${OPTION_COMPILE_ONLY}" != 'YES' ] && [ "${OPTION_EXPORT_DYNAMIC}" = 'YES' ]
+   then
+      platform::plugin::compiler::${plugin_name}::r_format_export_dynamic_flag
+      if [ ! -z "${RVAL}" ]
+      then
+         cmdline+=( ${RVAL} )  # Word splitting intentional
+      fi
    fi
 
    # Add rpath flags (only if not compile-only)

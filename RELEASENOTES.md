@@ -1,3 +1,5 @@
-## 1.3.0
+## 1.4.0
 
-Various small improvements
+
+* test runner discovers and executes `run-test` scripts in subdirectories
+* supports bash and zsh shells with optional lenient mode

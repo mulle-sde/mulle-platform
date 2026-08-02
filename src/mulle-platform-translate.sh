@@ -51,6 +51,7 @@ Usage:
 Options:
    --option            : specify commandline option for link command (-ld)
    --output-format <f> : one of file,ld,ldpath,ld_library_path,path,rpath (ld)
+   --platform <name>   : target platform for link flags (default: host uname)
    --separator <sep>   : specify separator for "ld" and "file"
 
 EOF
@@ -193,6 +194,11 @@ platform::translate::_r_translate_ld_static()
                      r_concat "${result}" "-Wl,--export-dynamic"
                      result="${RVAL}"
                   ;;
+
+                  darwin) # Mach-O uses a different spelling
+                     r_concat "${result}" "-Wl,-export_dynamic"
+                     result="${RVAL}"
+                  ;;
                esac
             ;;
          esac
@@ -326,6 +332,7 @@ platform::translate::_r_translate_ld()
    local preferredlibformat="$7"
    local wholearchiveformat="$8"
    local quote="$9"
+   local platform="${10}"
 
    local name
    local marks
@@ -344,10 +351,9 @@ platform::translate::_r_translate_ld()
       marks="${marks%%;*}" # superfluous
    fi
 
-   # Filter out libraries that are not required for this OS
-   # Use MULLE_CRAFT_PLATFORMS for target platform, fallback to MULLE_UNAME
-   local platform
-   platform="${MULLE_CRAFT_PLATFORMS%%:*}"
+   # Filter out libraries that are not required for this OS.
+   # The target platform is supplied by the caller (never read from another
+   # tool's MULLE_CRAFT_* namespace); fall back to the host uname.
    platform="${platform:-${MULLE_UNAME}}"
    
    case ",${marks}," in
@@ -402,10 +408,24 @@ platform::translate::_r_translate_ld()
       ;;
       
       *)
-         # For OS libraries (no-dependency mark), don't manipulate the name
+         # For OS libraries (no-dependency mark with no path), don't manipulate the name
          case ",${marks}," in
             *,no-dependency,*)
-               # OS library - use name as-is, no suffix manipulation
+               case "${name}" in
+                  /*)
+                     # Has a path - was resolved from dependency dir, strip suffix
+                     case ",${mode}," in 
+                        *,no-suffix,*)
+                           r_extensionless_filename "${ldname}"
+                           ldname="${RVAL}"
+                        ;;
+                     esac
+                  ;;
+
+                  *)
+                     # Bare name (OS library) - use name as-is, no suffix manipulation
+                  ;;
+               esac
             ;;
             
             *)
@@ -680,8 +700,9 @@ platform::translate::_r_translate_lines()
    local wholearchiveformat="$6"
    local separator="$7"
    local quote="$8"
+   local platform="$9"
 
-   shift 8
+   shift 9
 
    include "platform::environment"
 
@@ -700,9 +721,12 @@ platform::translate::_r_translate_lines()
    local _option_link_mode
    local _r_path_mangler
 
-   local platform 
-
-   platform="${MULLE_CRAFT_PLATFORMS%%:*}"
+   #
+   # The target platform is an explicit input. mulle-platform must not reach
+   # into another tool's namespace (e.g. MULLE_CRAFT_PLATFORMS) to guess it;
+   # callers pass it via --platform (see r_translate_lines/main). Default to
+   # the host uname when unspecified.
+   #
    platform="${platform:-${MULLE_UNAME}}"
 
    platform::environment::__get_fix_definitions "${platform}"
@@ -740,7 +764,8 @@ platform::translate::_r_translate_lines()
                                   "${_suffix_dynamiclib}" \
                                   "${preferredlibformat}" \
                                   "${wholearchiveformat}" \
-                                  "${quote}"
+                                  "${quote}" \
+                                  "${platform}"
          ;;
 
          ldpath)
@@ -807,11 +832,14 @@ platform::translate::_r_translate_lines()
 
 platform::translate::r_translate_lines()
 {
-   local format="$1" 
+   local format="$1"
    local preferredlibformat="$2"
    local wholearchiveformat="$3"
+   local separator="$4"
+   local quote="$5"
+   local platform="$6"
 
-   shift 3
+   shift 6
 
    platform::translate::_r_translate_lines "${format}" \
                                            'DEFAULT' \
@@ -819,6 +847,9 @@ platform::translate::r_translate_lines()
                                            'DEFAULT' \
                                            "${preferredlibformat}" \
                                            "${wholearchiveformat}" \
+                                           "${separator}" \
+                                           "${quote}" \
+                                           "${platform}" \
                                            "$@"
 }
 
@@ -838,6 +869,7 @@ platform::translate::main()
    local OPTION_PREFERRED_LIBRARY_STYLE='static'
    local OPTION_SEPARATOR=$'\n'
    local OPTION_QUOTE
+   local OPTION_PLATFORM
 
    while [ $# -ne 0 ]
    do
@@ -864,6 +896,14 @@ platform::translate::main()
             shift
 
             MULLE_UNAME="$1"
+            OPTION_PLATFORM="$1"
+         ;;
+
+         -p|--os|--platform)
+            [ $# -eq 1 ] && platform::translate::usage "Missing argument to \"$1\""
+            shift
+
+            OPTION_PLATFORM="$1"
          ;;
 
          --marks)
@@ -971,6 +1011,7 @@ platform::translate::main()
                                            "${OPTION_WHOLE_ARCHIVE_FORMAT}" \
                                            "${OPTION_SEPARATOR}" \
                                            "${OPTION_QUOTE}" \
+                                           "${OPTION_PLATFORM}" \
                                            "${firstline}${OPTION_MARKS}" \
                                            "$@"
 

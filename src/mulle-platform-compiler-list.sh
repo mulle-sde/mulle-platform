@@ -66,13 +66,13 @@ platform::compilers::check_compiler()
    then
       if [ "${verbose}" = "YES" ]
       then
-         local path
+         local filepath
          local version
 
-         path="$(command -v "${compiler}")"
+         filepath="$(command -v "${compiler}")"
          version="$("${compiler}" --version 2>&1 | head -1 || echo "version unavailable")"
 
-         printf "  %-20s : %s\n" "${compiler}" "${path}"
+         printf "  %-20s : %s\n" "${compiler}" "${filepath}"
          printf "  %-20s   %s\n" "" "${version}"
       else
          printf "  %s\n" "${compiler}"

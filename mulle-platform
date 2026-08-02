@@ -32,7 +32,7 @@
 #
 [ "${TRACE}" = 'YES' -o "${MULLE_PLATFORM_TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
-MULLE_EXECUTABLE_VERSION="1.3.0"
+MULLE_EXECUTABLE_VERSION="1.4.0"
 
 
 #
@@ -156,6 +156,8 @@ platform::main()
    local MULLE_FLAG_LOG_MERGE='NO'
    local MULLE_TRACE_POSTPONE='NO'
 
+   local subcmd
+
    #
    # simple option handling
    #
@@ -207,7 +209,7 @@ platform::main()
       ;;
 
       'compiler')
-         local subcmd="$1"
+         subcmd="$1"
          [ $# -eq 0 ] || shift
 
          case "${subcmd}" in
@@ -288,7 +290,7 @@ platform::main()
       ;;
 
       'linker')
-         local subcmd="$1"
+         subcmd="$1"
          [ $# -eq 0 ] || shift
 
          case "${subcmd}" in

@@ -60,7 +60,6 @@ platform::export::main()
    local OPTION_PLATFORM="${MULLE_UNAME}"
    local OPTION_COMPILER_TYPE
    local OPTION_FLAG_TYPE="cc" # cc or ld
-   local symbol
 
    while [ $# -ne 0 ]
    do

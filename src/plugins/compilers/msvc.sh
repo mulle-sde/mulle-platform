@@ -338,6 +338,14 @@ platform::plugin::compiler::msvc::r_format_export_symbol_flag()
 }
 
 
+# Format general export-dynamic flag. Not applicable to MSVC/Windows (symbol
+# export is controlled via .def files or /EXPORT), so this is a no-op.
+platform::plugin::compiler::msvc::r_format_export_dynamic_flag()
+{
+   RVAL=""
+}
+
+
 # Format assembler output flag
 platform::plugin::compiler::msvc::format_asm_output_flag()
 {

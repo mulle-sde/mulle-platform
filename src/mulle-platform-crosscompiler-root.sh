@@ -71,13 +71,13 @@ platform::crosscompiler_root::r_extract_version()
 {
    log_entry "platform::crosscompiler_root::r_extract_version" "$@"
 
-   local path="$1"
+   local filepath="$1"
    local compiler="$2"
    local platform="$3"
 
-   # Extract version from path like /opt/gcc-11.2.0-windows
+   # Extract version from filepath like /opt/gcc-11.2.0-windows
    # Remove /opt/ prefix and compiler- prefix and -platform suffix
-   local basename="${path#/opt/}"
+   local basename="${filepath#/opt/}"
    local middle="${basename#${compiler}-}"
    local version="${middle%-${platform}}"
    
@@ -152,6 +152,9 @@ platform::crosscompiler_root::find()
    # For each base directory, find version subdirectories
    local base_dir
    local candidates
+   local filepath
+   local version
+   local comparison
    
    while IFS= read -r base_dir
    do
@@ -162,23 +165,19 @@ platform::crosscompiler_root::find()
       candidates="$(ls -d ${base_dir}/* 2>/dev/null)"
       
       # Iterate through version directories
-      local path
-      local version
-      local comparison
-      
-      while IFS= read -r path
+      while IFS= read -r filepath
       do
-         [ -z "${path}" ] && continue
-         [ ! -d "${path}" ] && continue
+         [ -z "${filepath}" ] && continue
+         [ ! -d "${filepath}" ] && continue
          
-         # Extract version from path (just the basename)
-         version="${path##*/}"
+         # Extract version from filepath (just the basename)
+         version="${filepath##*/}"
          
-         log_fluff "Found candidate: ${path} (version: ${version})"
+         log_fluff "Found candidate: ${filepath} (version: ${version})"
          
          if [ -z "${best_version}" ]
          then
-            best_path="${path}"
+            best_path="${filepath}"
             best_version="${version}"
          else
             platform::crosscompiler_root::r_compare_versions "${version}" "${best_version}"
@@ -186,7 +185,7 @@ platform::crosscompiler_root::find()
             
             if [ "${comparison}" -gt 0 ]
             then
-               best_path="${path}"
+               best_path="${filepath}"
                best_version="${version}"
             fi
          fi

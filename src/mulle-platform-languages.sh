@@ -93,6 +93,9 @@ platform::languages::main()
    local compiler_type
    local language
    local dialect
+   local get_languages_func
+   local get_dialects_func
+   local dialects
 
    # Determine which compiler types to query
    if [ ! -z "${OPTION_COMPILER_TYPE}" ]
@@ -111,8 +114,8 @@ platform::languages::main()
          .continue
       fi
 
-      local get_languages_func="platform::plugin::compiler::${compiler_type}::get_languages"
-      local get_dialects_func="platform::plugin::compiler::${compiler_type}::get_dialects"
+      get_languages_func="platform::plugin::compiler::${compiler_type}::get_languages"
+      get_dialects_func="platform::plugin::compiler::${compiler_type}::get_dialects"
 
       if ! shell_is_function "${get_languages_func}"
       then
@@ -126,7 +129,6 @@ platform::languages::main()
       .do
          if shell_is_function "${get_dialects_func}"
          then
-            local dialects
             dialects="$("${get_dialects_func}" "${language}" | tr '\n' ', ' | sed 's/,$//')"
             printf "  %s: %s\n" "${language}" "${dialects}"
          else

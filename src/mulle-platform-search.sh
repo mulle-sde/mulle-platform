@@ -137,7 +137,6 @@ platform::search::r_search_dynamic_library()
       case "${_suffix_dynamiclib}" in
          .dll)
             local dll_path="${RVAL}"
-            local import_lib
 
             # Try .dll.a first (mingw cross-compile)
             import_lib="${dll_path%.dll}.dll.a"
@@ -210,7 +209,7 @@ platform::search::r_search_library()
    [ $# -lt 4 ] && _internal_fail "API mismatch"
 
    local directory="$1"
-   local require="$2"
+   local type="$2"
    local prefer="$3"
    local require="$4"
 

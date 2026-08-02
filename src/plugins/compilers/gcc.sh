@@ -367,12 +367,37 @@ platform::plugin::compiler::gcc::r_format_export_symbol_flag()
    # GCC/Clang uses -Wl,-exported_symbol on Darwin, -Wl,--export-dynamic elsewhere
    case "${MULLE_UNAME}" in
       darwin)
-         RVAL="-Wl,-exported_symbol -Wl,${symbol}"
+         # Darwin/Mach-O mangles a C identifier "foo" to the asm-level symbol
+         # "_foo" (and a C identifier "_foo" to "__foo"). -exported_symbol
+         # operates on asm-level names, so prepend the leading underscore that
+         # the Mach-O ABI adds. Without this the modern ld (>= ld-1230) turns
+         # the nonexistent name into an <initial-undefines> entry and the link
+         # fails with "Undefined symbols".
+         RVAL="-Wl,-exported_symbol -Wl,_${symbol}"
       ;;
       *)
          # On Linux and other platforms, all symbols are exported by default for executables
          # This flag is mainly used on Darwin
          RVAL=""
+      ;;
+   esac
+}
+
+
+# Format general export-dynamic flag (put executable symbols into the dynamic
+# symbol table so dlsym(RTLD_DEFAULT,...) can find them).
+platform::plugin::compiler::gcc::r_format_export_dynamic_flag()
+{
+   # Mach-O ld spells this "-export_dynamic"; ELF ld spells it "--export-dynamic"
+   case "${MULLE_UNAME}" in
+      darwin)
+         RVAL="-Wl,-export_dynamic"
+      ;;
+      windows)
+         RVAL=""
+      ;;
+      *)
+         RVAL="-Wl,--export-dynamic"
       ;;
    esac
 }
